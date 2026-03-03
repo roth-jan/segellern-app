@@ -1260,6 +1260,13 @@
                         </select>
                     </div>
 
+                    <div id="drive-voice-input-toggle" style="margin-top: 1.25rem; text-align: left;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; color: #ccc; font-size: 0.95rem; cursor: pointer;">
+                            <input type="checkbox" id="drive-voice-input-cb" checked onchange="onVoiceInputToggle()" style="width: 1.2rem; height: 1.2rem;">
+                            Per Sprache antworten (A, B, C, D sagen)
+                        </label>
+                    </div>
+
                     <div style="margin-top: 1rem; margin-bottom: 1.5rem;">
                         <button class="drive-test-btn" onclick="testVoice()">Stimme testen</button>
                     </div>
@@ -2203,6 +2210,9 @@
     let driveVoice = null;
     let driveWaitingForAnswer = false;
     let driveHistory = []; // {question, userAnswer, correct, isCorrect}
+    let driveVoiceInput = localStorage.getItem('sbf_voice_input') !== 'false'; // default: on
+    let recognition = null;
+    const hasSpeechRecognition = typeof webkitSpeechRecognition !== 'undefined' || typeof SpeechRecognition !== 'undefined';
     let openaiVoice = localStorage.getItem('sbf_openai_voice') || 'nova';
     let currentAudioSource = null; // AudioBufferSourceNode for stopping
     let audioCtx = null; // shared AudioContext, created on first user tap
@@ -2372,6 +2382,65 @@
         }
     }
 
+    function onVoiceInputToggle() {
+        driveVoiceInput = document.getElementById('drive-voice-input-cb').checked;
+        localStorage.setItem('sbf_voice_input', driveVoiceInput);
+    }
+
+    function startListening() {
+        if (!hasSpeechRecognition || !driveVoiceInput || !driveWaitingForAnswer) return;
+        stopListening();
+
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SR();
+        recognition.lang = 'de-DE';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 3;
+
+        recognition.onresult = (e) => {
+            if (!driveWaitingForAnswer) return;
+            for (let i = 0; i < e.results[0].length; i++) {
+                const spoken = e.results[0][i].transcript.trim().toLowerCase();
+                // Match A/B/C/D, ah/be/ce/de (German pronunciation), or 1/2/3/4
+                const map = {
+                    'a': 0, 'ah': 0, '1': 0, 'eins': 0, 'alpha': 0,
+                    'b': 1, 'be': 1, 'bee': 1, '2': 1, 'zwei': 1, 'bravo': 1,
+                    'c': 2, 'ce': 2, 'see': 2, 'zeh': 2, '3': 2, 'drei': 2, 'charlie': 2,
+                    'd': 3, 'de': 3, 'dee': 3, '4': 3, 'vier': 3, 'delta': 3,
+                };
+                if (spoken in map) {
+                    driveAnswer(map[spoken]);
+                    return;
+                }
+            }
+            // Not recognized — try again
+            if (driveWaitingForAnswer && driveActive) startListening();
+        };
+
+        recognition.onerror = (e) => {
+            if (e.error === 'no-speech' && driveWaitingForAnswer && driveActive) {
+                startListening(); // retry on silence
+            }
+        };
+
+        recognition.onend = () => {
+            // Auto-restart if still waiting
+            if (driveWaitingForAnswer && driveActive && driveVoiceInput) {
+                startListening();
+            }
+        };
+
+        recognition.start();
+    }
+
+    function stopListening() {
+        if (recognition) {
+            try { recognition.abort(); } catch(e) {}
+            recognition = null;
+        }
+    }
+
     // Main speak function — routes to OpenAI or Browser
     function driveSpeak(text) {
         return new Promise((resolve) => {
@@ -2418,6 +2487,10 @@
 
         if (ttsEngine === 'browser') initVoiceSelect();
 
+        // Restore voice input toggle
+        const vicb = document.getElementById('drive-voice-input-cb');
+        if (vicb) vicb.checked = driveVoiceInput;
+
         // Hide no-TTS warning when OpenAI is selected
         if (!hasTTS && ttsEngine === 'browser') {
             document.getElementById('drive-no-tts').classList.remove('hidden');
@@ -2447,6 +2520,7 @@
     function stopDriveMode() {
         driveActive = false;
         driveWaitingForAnswer = false;
+        stopListening();
         stopTTS();
         showDriveResult();
     }
@@ -2489,13 +2563,19 @@
         driveWaitingForAnswer = true;
 
         const ind = document.getElementById('drive-speaking');
-        if (ind) { ind.textContent = 'Tippe auf deine Antwort'; ind.classList.remove('active'); }
+        if (driveVoiceInput && hasSpeechRecognition) {
+            if (ind) { ind.textContent = 'Sag A, B, C oder D'; ind.classList.remove('active'); }
+            startListening();
+        } else {
+            if (ind) { ind.textContent = 'Tippe auf deine Antwort'; ind.classList.remove('active'); }
+        }
     }
 
     async function driveAnswer(index) {
         if (!driveWaitingForAnswer) return;
         driveWaitingForAnswer = false;
-        if (hasTTS) speechSynthesis.cancel();
+        stopListening();
+        stopTTS();
 
         const q = driveQuiz[driveIndex];
         const isCorrect = index === q.correct;
