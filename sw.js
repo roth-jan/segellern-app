@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sbf-navigator-v1';
+const CACHE_NAME = 'sbf-navigator-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -26,7 +26,7 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   // Network-first for API calls, cache-first for app assets
-  if (e.request.url.includes('api.anthropic.com')) return;
+  if (e.request.url.includes('api.anthropic.com') || e.request.url.includes('api.openai.com') || e.request.url.includes('api.deepseek.com')) return;
   e.respondWith(
     caches.match(e.request).then(cached =>
       cached || fetch(e.request).then(resp => {
