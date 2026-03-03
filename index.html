@@ -1229,11 +1229,32 @@
                         Dein Browser unterstuetzt leider keine Sprachausgabe. Bitte verwende Chrome, Safari oder Edge.
                     </div>
 
-                    <label style="display: block; text-align: left; margin-bottom: 0.5rem; color: #aaa; font-size: 0.9rem;">Deutsche Stimme waehlen:</label>
-                    <select id="drive-voice-select" class="drive-voice-select" onchange="onDriveVoiceChange()">
-                        <option>Stimmen werden geladen...</option>
+                    <label style="display: block; text-align: left; margin-bottom: 0.5rem; color: #aaa; font-size: 0.9rem;">Sprachausgabe:</label>
+                    <select id="drive-tts-engine" class="drive-voice-select" onchange="onTtsEngineChange()">
+                        <option value="openai" selected>OpenAI Cloud-Stimme (natuerlich)</option>
+                        <option value="browser">Browser-Stimme (offline)</option>
                     </select>
-                    <div style="margin-bottom: 1.5rem;">
+
+                    <div id="drive-openai-voice" style="margin-top: 0.75rem;">
+                        <label style="display: block; text-align: left; margin-bottom: 0.5rem; color: #aaa; font-size: 0.9rem;">Stimme:</label>
+                        <select id="drive-openai-voice-select" class="drive-voice-select" onchange="onOpenAIVoiceChange()">
+                            <option value="nova">Nova (weiblich, warm)</option>
+                            <option value="alloy">Alloy (neutral)</option>
+                            <option value="echo">Echo (maennlich)</option>
+                            <option value="shimmer">Shimmer (weiblich, klar)</option>
+                            <option value="onyx">Onyx (maennlich, tief)</option>
+                            <option value="fable">Fable (maennlich, erzaehlend)</option>
+                        </select>
+                    </div>
+
+                    <div id="drive-browser-voice" class="hidden" style="margin-top: 0.75rem;">
+                        <label style="display: block; text-align: left; margin-bottom: 0.5rem; color: #aaa; font-size: 0.9rem;">Browser-Stimme:</label>
+                        <select id="drive-voice-select" class="drive-voice-select" onchange="onDriveVoiceChange()">
+                            <option>Stimmen werden geladen...</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-top: 1rem; margin-bottom: 1.5rem;">
                         <button class="drive-test-btn" onclick="testVoice()">Stimme testen</button>
                     </div>
 
@@ -1273,7 +1294,9 @@
     let examAnswers = {};
     let apiKey = localStorage.getItem('sbf_api_key') || '';
     const DEEPSEEK_KEY = 'sk-783bfef951cd4d8b856f84091da5a081';
+    const OPENAI_KEY = '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';
     let aiProvider = localStorage.getItem('sbf_ai_provider') || 'deepseek'; // 'deepseek', 'claude', 'offline'
+    let ttsEngine = localStorage.getItem('sbf_tts_engine') || 'openai'; // 'openai' or 'browser'
 
     // Stats
     let stats = JSON.parse(localStorage.getItem('sbf_stats') || '{}');
@@ -1488,7 +1511,7 @@
         if (currentPage === 'fahrmodus' && page !== 'fahrmodus') {
             driveActive = false;
             driveWaitingForAnswer = false;
-            if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+            stopTTS();
         }
 
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -2174,6 +2197,8 @@
     let driveVoice = null;
     let driveWaitingForAnswer = false;
     let driveHistory = []; // {question, userAnswer, correct, isCorrect}
+    let openaiVoice = localStorage.getItem('sbf_openai_voice') || 'nova';
+    let currentAudio = null; // for stopping OpenAI TTS playback
     const hasTTS = typeof speechSynthesis !== 'undefined';
 
     function getGermanVoices() {
@@ -2190,14 +2215,12 @@
 
         if (voices.length === 0) {
             voiceInitAttempts++;
-            // iOS Safari: voices load async, retry up to 10x
             if (voiceInitAttempts < 10) {
                 setTimeout(initVoiceSelect, 300);
                 return;
             }
-            // After retries: show fallback (works without voice selection on iOS)
             select.innerHTML = '<option value="">Systemstimme (automatisch)</option>';
-            driveVoice = null; // null = browser picks default de-DE voice
+            driveVoice = null;
             return;
         }
 
@@ -2209,7 +2232,6 @@
             opt.textContent = `${v.name} (${v.lang})`;
             select.appendChild(opt);
         });
-        // Prefer premium/enhanced voices (Petra Premium, Anna Enhanced etc.)
         const preferred = voices.findIndex(v => {
             const n = v.name.toLowerCase();
             return n.includes('premium') || n.includes('enhanced') || n.includes('petra');
@@ -2224,38 +2246,62 @@
         driveVoice = voices[parseInt(select.value)] || voices[0];
     }
 
-    function testVoice() {
-        if (!hasTTS) return;
-        onDriveVoiceChange();
-        speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance('Willkommen beim Fahrmodus. Ich lese dir die Fragen vor.');
-        utter.lang = 'de-DE';
-        utter.rate = 0.95;
-        if (driveVoice) utter.voice = driveVoice;
-        speechSynthesis.speak(utter);
+    function onTtsEngineChange() {
+        const sel = document.getElementById('drive-tts-engine');
+        ttsEngine = sel.value;
+        localStorage.setItem('sbf_tts_engine', ttsEngine);
+        document.getElementById('drive-openai-voice').classList.toggle('hidden', ttsEngine !== 'openai');
+        document.getElementById('drive-browser-voice').classList.toggle('hidden', ttsEngine !== 'browser');
+        if (ttsEngine === 'browser') initVoiceSelect();
     }
 
-    // Speak text, returns Promise. Chunks long text to avoid Chrome 15s cutoff.
-    function driveSpeak(text) {
+    function onOpenAIVoiceChange() {
+        openaiVoice = document.getElementById('drive-openai-voice-select').value;
+        localStorage.setItem('sbf_openai_voice', openaiVoice);
+    }
+
+    // OpenAI TTS: text → mp3 audio blob → play
+    function speakOpenAI(text) {
+        return new Promise(async (resolve) => {
+            try {
+                const resp = await fetch('https://api.openai.com/v1/audio/speech', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + OPENAI_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'tts-1',
+                        voice: openaiVoice,
+                        input: text,
+                        response_format: 'mp3'
+                    })
+                });
+                if (!resp.ok) throw new Error('TTS API error: ' + resp.status);
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                const audio = new Audio(url);
+                currentAudio = audio;
+                audio.onended = () => { URL.revokeObjectURL(url); currentAudio = null; resolve(); };
+                audio.onerror = () => { URL.revokeObjectURL(url); currentAudio = null; resolve(); };
+                audio.play();
+            } catch (e) {
+                console.warn('OpenAI TTS failed, falling back to browser:', e);
+                resolve(speakBrowser(text));
+            }
+        });
+    }
+
+    // Browser TTS (fallback)
+    function speakBrowser(text) {
         return new Promise((resolve) => {
-            if (!driveActive || !text || !hasTTS) { resolve(); return; }
-
-            // Update speaking indicator
-            const ind = document.getElementById('drive-speaking');
-            if (ind) { ind.textContent = 'Spricht...'; ind.classList.add('active'); }
-
-            // Split long text at sentence boundaries
+            if (!hasTTS) { resolve(); return; }
             const chunks = text.length > 120
                 ? (text.match(/[^.!?]+[.!?]+/g) || [text])
                 : [text];
-
             let i = 0;
             function next() {
-                if (i >= chunks.length || !driveActive) {
-                    if (ind) { ind.textContent = ''; ind.classList.remove('active'); }
-                    resolve();
-                    return;
-                }
+                if (i >= chunks.length || !driveActive) { resolve(); return; }
                 const utter = new SpeechSynthesisUtterance(chunks[i].trim());
                 utter.lang = 'de-DE';
                 utter.rate = 0.95;
@@ -2269,14 +2315,67 @@
         });
     }
 
-    function renderDriveSetup() {
-        if (!hasTTS) {
-            document.getElementById('drive-no-tts').classList.remove('hidden');
+    function stopTTS() {
+        if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+        if (hasTTS) speechSynthesis.cancel();
+    }
+
+    function testVoice() {
+        stopTTS();
+        const text = 'Willkommen beim Fahrmodus. Ich lese dir die Fragen vor.';
+        if (ttsEngine === 'openai') {
+            speakOpenAI(text);
+        } else {
+            onDriveVoiceChange();
+            speakBrowser(text);
         }
+    }
+
+    // Main speak function — routes to OpenAI or Browser
+    function driveSpeak(text) {
+        return new Promise((resolve) => {
+            if (!driveActive || !text) { resolve(); return; }
+
+            const ind = document.getElementById('drive-speaking');
+            if (ind) { ind.textContent = 'Spricht...'; ind.classList.add('active'); }
+
+            const done = () => {
+                if (ind) { ind.textContent = ''; ind.classList.remove('active'); }
+                resolve();
+            };
+
+            if (ttsEngine === 'openai') {
+                speakOpenAI(text).then(done);
+            } else {
+                if (!hasTTS) { done(); return; }
+                speakBrowser(text).then(done);
+            }
+        });
+    }
+
+    function renderDriveSetup() {
         document.getElementById('drive-setup').classList.remove('hidden');
         document.getElementById('drive-active').classList.add('hidden');
         document.getElementById('drive-result').classList.add('hidden');
-        initVoiceSelect();
+
+        // Restore saved TTS engine choice
+        const engineSel = document.getElementById('drive-tts-engine');
+        if (engineSel) engineSel.value = ttsEngine;
+        document.getElementById('drive-openai-voice').classList.toggle('hidden', ttsEngine !== 'openai');
+        document.getElementById('drive-browser-voice').classList.toggle('hidden', ttsEngine !== 'browser');
+
+        // Restore saved OpenAI voice
+        const oaiSel = document.getElementById('drive-openai-voice-select');
+        if (oaiSel) oaiSel.value = openaiVoice;
+
+        if (ttsEngine === 'browser') initVoiceSelect();
+
+        // Hide no-TTS warning when OpenAI is selected (works without browser TTS)
+        if (!hasTTS && ttsEngine === 'browser') {
+            document.getElementById('drive-no-tts').classList.remove('hidden');
+        } else {
+            document.getElementById('drive-no-tts').classList.add('hidden');
+        }
     }
 
     function startDriveMode() {
@@ -2300,7 +2399,7 @@
     function stopDriveMode() {
         driveActive = false;
         driveWaitingForAnswer = false;
-        if (hasTTS) speechSynthesis.cancel();
+        stopTTS();
         showDriveResult();
     }
 
