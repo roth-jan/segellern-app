@@ -706,6 +706,197 @@
         }
 
         .exam-timer.warning { color: var(--danger); border-color: var(--danger); }
+
+        /* Fahrmodus */
+        .drive-page {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            margin: -1.5rem;
+            padding: 1.5rem;
+            min-height: calc(100vh - 60px);
+        }
+
+        .drive-setup {
+            max-width: 600px;
+            margin: 2rem auto;
+            text-align: center;
+        }
+
+        .drive-setup h2 { color: #fff; font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .drive-setup p { color: #aaa; margin-bottom: 1.5rem; line-height: 1.6; font-size: 0.95rem; }
+
+        .drive-voice-select {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #2a2a3e;
+            color: #fff;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .drive-test-btn {
+            padding: 0.5rem 1.25rem;
+            border: 1px solid #667eea;
+            background: transparent;
+            color: #667eea;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+        }
+
+        .drive-test-btn:hover { background: #667eea; color: white; }
+
+        .drive-start-btn {
+            width: 100%;
+            padding: 1.25rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            background: var(--secondary);
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .drive-start-btn:hover { background: #2d9249; }
+
+        .drive-no-tts {
+            background: #332200;
+            border: 1px solid #664400;
+            border-radius: 10px;
+            padding: 1.25rem;
+            color: #ffcc80;
+            margin-bottom: 1rem;
+        }
+
+        .drive-active-area { max-width: 700px; margin: 0 auto; }
+
+        .drive-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+
+        .drive-header span { font-size: 1rem; color: #aaa; }
+
+        .drive-stop-btn {
+            padding: 0.5rem 1.25rem;
+            border: 1px solid #ef5350;
+            background: transparent;
+            color: #ef5350;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .drive-stop-btn:hover { background: #ef5350; color: white; }
+
+        .drive-speaking {
+            text-align: center;
+            padding: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+            color: #667eea;
+            min-height: 2rem;
+        }
+
+        .drive-speaking.active::after {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            margin-left: 0.5rem;
+            animation: drivePulse 1s infinite;
+        }
+
+        @keyframes drivePulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+        .drive-question-text {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: #fff;
+            line-height: 1.6;
+            margin-bottom: 1.25rem;
+            padding: 1.25rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }
+
+        .drive-option {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            padding: 1.25rem;
+            margin-bottom: 0.75rem;
+            border: 2px solid #444;
+            border-radius: 12px;
+            background: #2a2a3e;
+            color: #e0e0e0;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: left;
+            font-family: inherit;
+        }
+
+        .drive-option:hover:not(:disabled) { border-color: #667eea; background: #333352; }
+        .drive-option:active:not(:disabled) { transform: scale(0.98); }
+
+        .drive-option.correct { border-color: #4caf50; background: rgba(76,175,80,0.15); color: #81c784; }
+        .drive-option.wrong { border-color: #ef5350; background: rgba(239,83,80,0.15); color: #ef9a9a; }
+        .drive-option:disabled { cursor: default; }
+
+        .drive-letter {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .drive-option.correct .drive-letter { background: #4caf50; color: white; }
+        .drive-option.wrong .drive-letter { background: #ef5350; color: white; }
+
+        .drive-feedback {
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 10px;
+            min-height: 1rem;
+        }
+
+        .drive-feedback.correct { color: #81c784; background: rgba(76,175,80,0.1); }
+        .drive-feedback.wrong { color: #ef9a9a; background: rgba(239,83,80,0.1); }
+
+        .drive-result { text-align: center; padding: 2rem 1rem; }
+        .drive-result h2 { color: #fff; font-size: 1.5rem; margin-bottom: 1rem; }
+        .drive-result .drive-score-big { font-size: 3.5rem; font-weight: 700; color: var(--primary); }
+        .drive-result p { color: #aaa; }
+
+        @media (max-width: 768px) {
+            .drive-question-text { font-size: 1.1rem; padding: 1rem; }
+            .drive-option { padding: 1rem; font-size: 1rem; }
+            .drive-letter { width: 38px; height: 38px; }
+        }
     </style>
 </head>
 <body>
@@ -721,6 +912,7 @@
             <button class="nav-tab" onclick="showPage('quiz')" data-page="quiz">Quiz</button>
             <button class="nav-tab" onclick="showPage('pruefung')" data-page="pruefung">Pruefung</button>
             <button class="nav-tab" onclick="showPage('ki-chat')" data-page="ki-chat">KI-Assistent</button>
+            <button class="nav-tab" onclick="showPage('fahrmodus')" data-page="fahrmodus">Fahrmodus</button>
         </div>
         <div class="nav-settings">
             <div class="license-toggle">
@@ -981,6 +1173,46 @@
                 </div>
             </div>
         </div>
+
+        <!-- ==================== FAHRMODUS ==================== -->
+        <div id="page-fahrmodus" class="page">
+            <div class="drive-page">
+                <div id="drive-setup" class="drive-setup">
+                    <h2>Fahrmodus</h2>
+                    <p>Die App liest dir Fragen und Antwortmoeglichkeiten vor. Tippe auf die richtige Antwort. Perfekt fuer unterwegs.</p>
+
+                    <div id="drive-no-tts" class="drive-no-tts hidden">
+                        Dein Browser unterstuetzt leider keine Sprachausgabe. Bitte verwende Chrome, Safari oder Edge.
+                    </div>
+
+                    <label style="display: block; text-align: left; margin-bottom: 0.5rem; color: #aaa; font-size: 0.9rem;">Deutsche Stimme waehlen:</label>
+                    <select id="drive-voice-select" class="drive-voice-select" onchange="onDriveVoiceChange()">
+                        <option>Stimmen werden geladen...</option>
+                    </select>
+                    <div style="margin-bottom: 1.5rem;">
+                        <button class="drive-test-btn" onclick="testVoice()">Stimme testen</button>
+                    </div>
+
+                    <button class="drive-start-btn" onclick="startDriveMode()">Quiz starten</button>
+                </div>
+
+                <div id="drive-active" class="drive-active-area hidden">
+                    <div class="drive-header">
+                        <span id="drive-progress">Frage 1 von 30</span>
+                        <span id="drive-score">0 richtig</span>
+                        <button class="drive-stop-btn" onclick="stopDriveMode()">Beenden</button>
+                    </div>
+                    <div class="drive-speaking" id="drive-speaking"></div>
+                    <div class="drive-question-text" id="drive-question"></div>
+                    <div id="drive-options"></div>
+                    <div class="drive-feedback" id="drive-feedback"></div>
+                </div>
+
+                <div id="drive-result" class="drive-result hidden">
+                    <div id="drive-result-content"></div>
+                </div>
+            </div>
+        </div>
     </div>
     <script>
     // ==================== STATE ====================
@@ -1206,6 +1438,13 @@
 
     // ==================== PAGE NAVIGATION ====================
     function showPage(page) {
+        // Stop drive mode TTS when leaving
+        if (currentPage === 'fahrmodus' && page !== 'fahrmodus') {
+            driveActive = false;
+            driveWaitingForAnswer = false;
+            if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+        }
+
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById('page-' + page).classList.add('active');
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -1216,6 +1455,7 @@
         if (page === 'quiz') renderQuizSetup();
         if (page === 'dashboard') renderDashboard();
         if (page === 'pruefung') renderExamSetup();
+        if (page === 'fahrmodus') renderDriveSetup();
     }
 
     function setLicense(license) {
@@ -1818,6 +2058,247 @@
 
     function saveStats() {
         localStorage.setItem('sbf_stats', JSON.stringify(stats));
+    }
+
+    // ==================== FAHRMODUS (Sprach-Quiz) ====================
+    let driveActive = false;
+    let driveQuiz = [];
+    let driveIndex = 0;
+    let driveCorrect = 0;
+    let driveVoice = null;
+    let driveWaitingForAnswer = false;
+    const hasTTS = typeof speechSynthesis !== 'undefined';
+
+    function getGermanVoices() {
+        if (!hasTTS) return [];
+        return speechSynthesis.getVoices().filter(v => v.lang.startsWith('de'));
+    }
+
+    function initVoiceSelect() {
+        const select = document.getElementById('drive-voice-select');
+        if (!select) return;
+        const voices = getGermanVoices();
+        if (voices.length === 0) {
+            select.innerHTML = '<option value="">Keine deutschen Stimmen verfuegbar</option>';
+            return;
+        }
+        select.innerHTML = '';
+        voices.forEach((v, i) => {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = `${v.name} (${v.lang})`;
+            select.appendChild(opt);
+        });
+        // Prefer premium/enhanced voices
+        const preferred = voices.findIndex(v => {
+            const n = v.name.toLowerCase();
+            return n.includes('premium') || n.includes('enhanced') || n.includes('neural') || n.includes('compact') === false;
+        });
+        if (preferred >= 0) select.value = preferred;
+        driveVoice = voices[parseInt(select.value)] || voices[0];
+    }
+
+    function onDriveVoiceChange() {
+        const voices = getGermanVoices();
+        const select = document.getElementById('drive-voice-select');
+        driveVoice = voices[parseInt(select.value)] || voices[0];
+    }
+
+    function testVoice() {
+        if (!hasTTS) return;
+        onDriveVoiceChange();
+        speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance('Willkommen beim Fahrmodus. Ich lese dir die Fragen vor.');
+        utter.lang = 'de-DE';
+        utter.rate = 0.95;
+        if (driveVoice) utter.voice = driveVoice;
+        speechSynthesis.speak(utter);
+    }
+
+    // Speak text, returns Promise. Chunks long text to avoid Chrome 15s cutoff.
+    function driveSpeak(text) {
+        return new Promise((resolve) => {
+            if (!driveActive || !text || !hasTTS) { resolve(); return; }
+
+            // Update speaking indicator
+            const ind = document.getElementById('drive-speaking');
+            if (ind) { ind.textContent = 'Spricht...'; ind.classList.add('active'); }
+
+            // Split long text at sentence boundaries
+            const chunks = text.length > 120
+                ? (text.match(/[^.!?]+[.!?]+/g) || [text])
+                : [text];
+
+            let i = 0;
+            function next() {
+                if (i >= chunks.length || !driveActive) {
+                    if (ind) { ind.textContent = ''; ind.classList.remove('active'); }
+                    resolve();
+                    return;
+                }
+                const utter = new SpeechSynthesisUtterance(chunks[i].trim());
+                utter.lang = 'de-DE';
+                utter.rate = 0.95;
+                utter.pitch = 1.0;
+                if (driveVoice) utter.voice = driveVoice;
+                utter.onend = () => { i++; next(); };
+                utter.onerror = () => { i++; next(); };
+                speechSynthesis.speak(utter);
+            }
+            next();
+        });
+    }
+
+    function renderDriveSetup() {
+        if (!hasTTS) {
+            document.getElementById('drive-no-tts').classList.remove('hidden');
+        }
+        document.getElementById('drive-setup').classList.remove('hidden');
+        document.getElementById('drive-active').classList.add('hidden');
+        document.getElementById('drive-result').classList.add('hidden');
+        initVoiceSelect();
+    }
+
+    function startDriveMode() {
+        onDriveVoiceChange();
+        let pool = [...questions[currentLicense]];
+        shuffleArray(pool);
+        driveQuiz = pool;
+        driveIndex = 0;
+        driveCorrect = 0;
+        driveActive = true;
+        driveWaitingForAnswer = false;
+
+        document.getElementById('drive-setup').classList.add('hidden');
+        document.getElementById('drive-active').classList.remove('hidden');
+        document.getElementById('drive-result').classList.add('hidden');
+
+        setTimeout(() => playDriveQuestion(), 500);
+    }
+
+    function stopDriveMode() {
+        driveActive = false;
+        driveWaitingForAnswer = false;
+        if (hasTTS) speechSynthesis.cancel();
+        showDriveResult();
+    }
+
+    async function playDriveQuestion() {
+        if (!driveActive || driveIndex >= driveQuiz.length) {
+            showDriveResult();
+            return;
+        }
+
+        const q = driveQuiz[driveIndex];
+        driveWaitingForAnswer = false;
+
+        // Update UI
+        document.getElementById('drive-progress').textContent = `Frage ${driveIndex + 1} von ${driveQuiz.length}`;
+        document.getElementById('drive-score').textContent = `${driveCorrect} richtig`;
+        document.getElementById('drive-question').textContent = q.q;
+
+        document.getElementById('drive-options').innerHTML = q.options.map((opt, i) =>
+            `<button class="drive-option" id="drive-opt-${i}" onclick="driveAnswer(${i})">
+                <span class="drive-letter">${String.fromCharCode(65 + i)}</span>
+                <span>${opt}</span>
+            </button>`
+        ).join('');
+
+        document.getElementById('drive-feedback').textContent = '';
+        document.getElementById('drive-feedback').className = 'drive-feedback';
+
+        // Read question aloud
+        await driveSpeak(`Frage ${driveIndex + 1}. ${q.q}`);
+        if (!driveActive) return;
+
+        // Read each option
+        for (let i = 0; i < q.options.length; i++) {
+            if (!driveActive) return;
+            await driveSpeak(`${String.fromCharCode(65 + i)}: ${q.options[i]}`);
+        }
+
+        if (!driveActive) return;
+        driveWaitingForAnswer = true;
+
+        const ind = document.getElementById('drive-speaking');
+        if (ind) { ind.textContent = 'Tippe auf deine Antwort'; ind.classList.remove('active'); }
+    }
+
+    async function driveAnswer(index) {
+        if (!driveWaitingForAnswer) return;
+        driveWaitingForAnswer = false;
+        if (hasTTS) speechSynthesis.cancel();
+
+        const q = driveQuiz[driveIndex];
+        const isCorrect = index === q.correct;
+
+        // Visual feedback
+        document.querySelectorAll('.drive-option').forEach((opt, i) => {
+            opt.disabled = true;
+            if (i === index && !isCorrect) opt.classList.add('wrong');
+            if (i === q.correct) opt.classList.add('correct');
+        });
+
+        const feedbackEl = document.getElementById('drive-feedback');
+
+        if (isCorrect) {
+            driveCorrect++;
+            feedbackEl.textContent = 'Richtig!';
+            feedbackEl.className = 'drive-feedback correct';
+            await driveSpeak('Richtig!');
+        } else {
+            const correctLetter = String.fromCharCode(65 + q.correct);
+            const correctText = q.options[q.correct];
+            feedbackEl.textContent = `Falsch. Richtig: ${correctLetter}) ${correctText}`;
+            feedbackEl.className = 'drive-feedback wrong';
+            await driveSpeak(`Leider falsch. Die richtige Antwort ist ${correctLetter}: ${correctText}`);
+        }
+
+        if (!driveActive) return;
+
+        // Read explanation
+        await driveSpeak(q.explanation);
+
+        // Update stats
+        stats.answered = (stats.answered || 0) + 1;
+        if (isCorrect) stats.correct = (stats.correct || 0) + 1;
+        stats['topic_' + currentLicense + '_' + q.topic] = (stats['topic_' + currentLicense + '_' + q.topic] || 0) + (isCorrect ? 1 : 0);
+        saveStats();
+
+        document.getElementById('drive-score').textContent = `${driveCorrect} richtig`;
+
+        if (!driveActive) return;
+        await new Promise(r => setTimeout(r, 1500));
+        driveIndex++;
+        if (driveActive) playDriveQuestion();
+    }
+
+    function showDriveResult() {
+        driveActive = false;
+        if (hasTTS) speechSynthesis.cancel();
+
+        document.getElementById('drive-setup').classList.add('hidden');
+        document.getElementById('drive-active').classList.add('hidden');
+        document.getElementById('drive-result').classList.remove('hidden');
+
+        const total = driveIndex;
+        const pct = total > 0 ? Math.round((driveCorrect / total) * 100) : 0;
+
+        document.getElementById('drive-result-content').innerHTML = `
+            <div style="font-size: 4rem; margin-bottom: 1rem;">${pct >= 80 ? '🎉' : '📚'}</div>
+            <div class="drive-score-big">${pct}%</div>
+            <p style="font-size: 1.2rem; margin: 1rem 0 2rem;">
+                ${driveCorrect} von ${total} Fragen richtig
+            </p>
+            <button class="drive-start-btn" onclick="renderDriveSetup()" style="max-width: 400px; margin: 0 auto;">
+                Nochmal starten
+            </button>
+        `;
+    }
+
+    // Init TTS voices (async in Chrome)
+    if (hasTTS && speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = initVoiceSelect;
     }
 
     // ==================== INIT ====================
