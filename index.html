@@ -1247,6 +1247,12 @@
                         </select>
                     </div>
 
+                    <div id="drive-openai-key" style="margin-top: 0.75rem;">
+                        <label style="display: block; text-align: left; margin-bottom: 0.5rem; color: #aaa; font-size: 0.9rem;">OpenAI API-Key:</label>
+                        <input type="password" id="drive-openai-key-input" class="drive-voice-select" placeholder="sk-proj-..." oninput="onOpenAIKeyChange()" style="font-family: monospace; font-size: 0.85rem;">
+                        <div id="drive-openai-key-status" style="font-size: 0.8rem; margin-top: 0.3rem; color: #666;"></div>
+                    </div>
+
                     <div id="drive-browser-voice" class="hidden" style="margin-top: 0.75rem;">
                         <label style="display: block; text-align: left; margin-bottom: 0.5rem; color: #aaa; font-size: 0.9rem;">Browser-Stimme:</label>
                         <select id="drive-voice-select" class="drive-voice-select" onchange="onDriveVoiceChange()">
@@ -1294,7 +1300,7 @@
     let examAnswers = {};
     let apiKey = localStorage.getItem('sbf_api_key') || '';
     const DEEPSEEK_KEY = 'sk-783bfef951cd4d8b856f84091da5a081';
-    const OPENAI_KEY = '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';
+    let OPENAI_KEY = localStorage.getItem('sbf_openai_key') || '';
     let aiProvider = localStorage.getItem('sbf_ai_provider') || 'deepseek'; // 'deepseek', 'claude', 'offline'
     let ttsEngine = localStorage.getItem('sbf_tts_engine') || 'openai'; // 'openai' or 'browser'
 
@@ -2252,6 +2258,7 @@
         ttsEngine = sel.value;
         localStorage.setItem('sbf_tts_engine', ttsEngine);
         document.getElementById('drive-openai-voice').classList.toggle('hidden', ttsEngine !== 'openai');
+        document.getElementById('drive-openai-key').classList.toggle('hidden', ttsEngine !== 'openai');
         document.getElementById('drive-browser-voice').classList.toggle('hidden', ttsEngine !== 'browser');
         if (ttsEngine === 'browser') initVoiceSelect();
     }
@@ -2259,6 +2266,22 @@
     function onOpenAIVoiceChange() {
         openaiVoice = document.getElementById('drive-openai-voice-select').value;
         localStorage.setItem('sbf_openai_voice', openaiVoice);
+    }
+
+    function onOpenAIKeyChange() {
+        const input = document.getElementById('drive-openai-key-input');
+        const status = document.getElementById('drive-openai-key-status');
+        OPENAI_KEY = input.value.trim();
+        localStorage.setItem('sbf_openai_key', OPENAI_KEY);
+        if (OPENAI_KEY.startsWith('sk-')) {
+            status.textContent = 'Key gespeichert';
+            status.style.color = '#4caf50';
+        } else if (OPENAI_KEY.length > 0) {
+            status.textContent = 'Key sollte mit sk- beginnen';
+            status.style.color = '#ff9800';
+        } else {
+            status.textContent = '';
+        }
     }
 
     // Ensure AudioContext exists and is resumed (must be called from user gesture)
@@ -2335,6 +2358,11 @@
 
     function testVoice() {
         stopTTS();
+        if (ttsEngine === 'openai' && !OPENAI_KEY) {
+            const status = document.getElementById('drive-openai-key-status');
+            if (status) { status.textContent = 'Bitte erst API-Key eingeben!'; status.style.color = '#f44336'; }
+            return;
+        }
         const text = 'Willkommen beim Fahrmodus. Ich lese dir die Fragen vor.';
         if (ttsEngine === 'openai') {
             speakOpenAI(text);
@@ -2375,15 +2403,22 @@
         const engineSel = document.getElementById('drive-tts-engine');
         if (engineSel) engineSel.value = ttsEngine;
         document.getElementById('drive-openai-voice').classList.toggle('hidden', ttsEngine !== 'openai');
+        document.getElementById('drive-openai-key').classList.toggle('hidden', ttsEngine !== 'openai');
         document.getElementById('drive-browser-voice').classList.toggle('hidden', ttsEngine !== 'browser');
 
-        // Restore saved OpenAI voice
+        // Restore saved OpenAI voice + key
         const oaiSel = document.getElementById('drive-openai-voice-select');
         if (oaiSel) oaiSel.value = openaiVoice;
+        const keyInput = document.getElementById('drive-openai-key-input');
+        if (keyInput && OPENAI_KEY) {
+            keyInput.value = OPENAI_KEY;
+            const status = document.getElementById('drive-openai-key-status');
+            if (status) { status.textContent = 'Key gespeichert'; status.style.color = '#4caf50'; }
+        }
 
         if (ttsEngine === 'browser') initVoiceSelect();
 
-        // Hide no-TTS warning when OpenAI is selected (works without browser TTS)
+        // Hide no-TTS warning when OpenAI is selected
         if (!hasTTS && ttsEngine === 'browser') {
             document.getElementById('drive-no-tts').classList.remove('hidden');
         } else {

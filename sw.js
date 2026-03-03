@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sbf-navigator-v3';
+const CACHE_NAME = 'sbf-navigator-v4';
 const ASSETS = [
   './',
   './index.html',
