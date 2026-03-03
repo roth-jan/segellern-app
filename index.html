@@ -1161,19 +1161,25 @@
         <!-- ==================== KI-CHAT ==================== -->
         <div id="page-ki-chat" class="page">
             <div id="api-key-setup" class="api-key-banner">
-                <div style="font-size: 1.5rem;">🔑</div>
+                <div style="font-size: 1.5rem;">🤖</div>
                 <div style="flex: 1;">
-                    <h4 style="margin-bottom: 0.25rem;">Claude API-Key eingeben</h4>
+                    <h4 style="margin-bottom: 0.25rem;">KI-Assistent Einstellungen</h4>
                     <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 0.75rem;">
-                        Fuer die KI-Funktion brauchst du einen Anthropic API-Key.
-                        Dein Key wird nur lokal in deinem Browser gespeichert.
-                        <strong>Ohne Key steht dir ein integriertes Wissens-System zur Verfuegung.</strong>
+                        Waehle einen KI-Anbieter. DeepSeek ist voreingestellt und kostenlos nutzbar.
+                        <strong>Ohne KI steht ein integriertes Wissens-System zur Verfuegung.</strong>
                     </p>
-                    <div style="display: flex; gap: 0.5rem;">
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                        <select id="ai-provider-select" style="padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem;" onchange="onProviderChange()">
+                            <option value="deepseek">DeepSeek (voreingestellt)</option>
+                            <option value="claude">Claude (eigener Key)</option>
+                            <option value="offline">Offline-Wissen</option>
+                        </select>
+                    </div>
+                    <div id="claude-key-row" style="display: none; gap: 0.5rem;">
                         <input type="password" id="api-key-input" placeholder="sk-ant-..." style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px;">
                         <button class="btn btn-primary" onclick="saveApiKey()">Speichern</button>
-                        <button class="btn btn-secondary" onclick="dismissApiKey()">Ohne KI fortfahren</button>
                     </div>
+                    <button class="btn btn-primary" onclick="saveAiProvider()" style="margin-top: 0.5rem;">Uebernehmen</button>
                 </div>
             </div>
 
@@ -1266,6 +1272,8 @@
     let examTimeLeft = 0;
     let examAnswers = {};
     let apiKey = localStorage.getItem('sbf_api_key') || '';
+    const DEEPSEEK_KEY = 'sk-783bfef951cd4d8b856f84091da5a081';
+    let aiProvider = localStorage.getItem('sbf_ai_provider') || 'deepseek'; // 'deepseek', 'claude', 'offline'
 
     // Stats
     let stats = JSON.parse(localStorage.getItem('sbf_stats') || '{}');
@@ -1969,26 +1977,56 @@
     }
 
     // ==================== AI CHAT ====================
+    const SBF_SYSTEM_PROMPT = 'Du bist ein Experte fuer den deutschen Sportbootfuehrerschein (SBF) Binnen und See. Beantworte Fragen praezise und hilfreich auf Deutsch. Gib konkrete, pruefungsrelevante Antworten. Verwende Aufzaehlungen und Struktur fuer bessere Lesbarkeit.';
+
+    function onProviderChange() {
+        const provider = document.getElementById('ai-provider-select').value;
+        const claudeRow = document.getElementById('claude-key-row');
+        claudeRow.style.display = provider === 'claude' ? 'flex' : 'none';
+    }
+
+    function saveAiProvider() {
+        const provider = document.getElementById('ai-provider-select').value;
+        aiProvider = provider;
+        localStorage.setItem('sbf_ai_provider', provider);
+
+        if (provider === 'claude') {
+            const key = document.getElementById('api-key-input').value.trim();
+            if (key) {
+                apiKey = key;
+                localStorage.setItem('sbf_api_key', key);
+            }
+        }
+
+        document.getElementById('api-key-setup').classList.add('hidden');
+        updateChatModeLabel();
+    }
+
     function saveApiKey() {
         const key = document.getElementById('api-key-input').value.trim();
         if (key) {
             apiKey = key;
             localStorage.setItem('sbf_api_key', key);
+            aiProvider = 'claude';
+            localStorage.setItem('sbf_ai_provider', 'claude');
             document.getElementById('api-key-setup').classList.add('hidden');
-            document.getElementById('chat-mode-label').textContent = 'KI-Modus (Claude)';
+            updateChatModeLabel();
         }
     }
 
-    function dismissApiKey() {
-        document.getElementById('api-key-setup').classList.add('hidden');
-        document.getElementById('chat-mode-label').textContent = 'Wissens-Modus (Offline)';
+    function updateChatModeLabel() {
+        const labels = { deepseek: 'KI-Modus (DeepSeek)', claude: 'KI-Modus (Claude)', offline: 'Wissens-Modus (Offline)' };
+        document.getElementById('chat-mode-label').textContent = labels[aiProvider] || labels.deepseek;
     }
 
-    // Check if API key exists
-    if (apiKey) {
+    // Auto-init: DeepSeek is default, hide banner if not Claude
+    if (aiProvider === 'deepseek' || (aiProvider === 'claude' && apiKey)) {
         document.getElementById('api-key-setup').classList.add('hidden');
-        document.getElementById('chat-mode-label').textContent = 'KI-Modus (Claude)';
     }
+    if (aiProvider === 'offline') {
+        document.getElementById('api-key-setup').classList.add('hidden');
+    }
+    updateChatModeLabel();
 
     function askSuggestion(el) {
         document.getElementById('chat-input').value = el.textContent;
@@ -2003,12 +2041,44 @@
         input.value = '';
         addChatMessage('user', msg);
 
-        // Show typing indicator
         const typingId = 'typing-' + Date.now();
         addTypingIndicator(typingId);
 
-        if (apiKey) {
-            // Use Claude API
+        const systemMsg = SBF_SYSTEM_PROMPT + ` Aktueller Modus: ${currentLicense === 'binnen' ? 'SBF Binnen' : 'SBF See'}`;
+
+        if (aiProvider === 'deepseek') {
+            // DeepSeek API (OpenAI-kompatibel)
+            try {
+                const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + DEEPSEEK_KEY
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-chat',
+                        max_tokens: 1024,
+                        messages: [
+                            { role: 'system', content: systemMsg },
+                            { role: 'user', content: msg }
+                        ]
+                    })
+                });
+
+                removeTypingIndicator(typingId);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addChatMessage('ai', data.choices[0].message.content);
+                } else {
+                    addChatMessage('ai', 'DeepSeek-Fehler. Offline-Wissen:\n\n' + getKnowledgeResponse(msg));
+                }
+            } catch (error) {
+                removeTypingIndicator(typingId);
+                addChatMessage('ai', 'Verbindungsfehler. Offline-Wissen:\n\n' + getKnowledgeResponse(msg));
+            }
+        } else if (aiProvider === 'claude' && apiKey) {
+            // Claude API
             try {
                 const response = await fetch('https://api.anthropic.com/v1/messages', {
                     method: 'POST',
@@ -2021,7 +2091,7 @@
                     body: JSON.stringify({
                         model: 'claude-sonnet-4-20250514',
                         max_tokens: 1024,
-                        system: `Du bist ein Experte fuer den deutschen Sportbootfuehrerschein (SBF) Binnen und See. Beantworte Fragen praezise und hilfreich auf Deutsch. Gib konkrete, pruefungsrelevante Antworten. Verwende Aufzaehlungen und Struktur fuer bessere Lesbarkeit. Aktueller Modus: ${currentLicense === 'binnen' ? 'SBF Binnen' : 'SBF See'}`,
+                        system: systemMsg,
                         messages: [{ role: 'user', content: msg }]
                     })
                 });
@@ -2030,18 +2100,16 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    const aiMsg = data.content[0].text;
-                    addChatMessage('ai', aiMsg);
+                    addChatMessage('ai', data.content[0].text);
                 } else {
-                    const errData = await response.json().catch(() => ({}));
-                    addChatMessage('ai', 'Fehler bei der KI-Anfrage. Ich nutze stattdessen das Offline-Wissen.\n\n' + getKnowledgeResponse(msg));
+                    addChatMessage('ai', 'Claude-Fehler. Offline-Wissen:\n\n' + getKnowledgeResponse(msg));
                 }
             } catch (error) {
                 removeTypingIndicator(typingId);
-                addChatMessage('ai', 'Verbindungsfehler. Ich nutze das Offline-Wissen:\n\n' + getKnowledgeResponse(msg));
+                addChatMessage('ai', 'Verbindungsfehler. Offline-Wissen:\n\n' + getKnowledgeResponse(msg));
             }
         } else {
-            // Offline mode - simulate typing delay
+            // Offline mode
             setTimeout(() => {
                 removeTypingIndicator(typingId);
                 addChatMessage('ai', getKnowledgeResponse(msg));
@@ -2113,14 +2181,27 @@
         return speechSynthesis.getVoices().filter(v => v.lang.startsWith('de'));
     }
 
+    let voiceInitAttempts = 0;
+
     function initVoiceSelect() {
         const select = document.getElementById('drive-voice-select');
         if (!select) return;
         const voices = getGermanVoices();
+
         if (voices.length === 0) {
-            select.innerHTML = '<option value="">Keine deutschen Stimmen verfuegbar</option>';
+            voiceInitAttempts++;
+            // iOS Safari: voices load async, retry up to 10x
+            if (voiceInitAttempts < 10) {
+                setTimeout(initVoiceSelect, 300);
+                return;
+            }
+            // After retries: show fallback (works without voice selection on iOS)
+            select.innerHTML = '<option value="">Systemstimme (automatisch)</option>';
+            driveVoice = null; // null = browser picks default de-DE voice
             return;
         }
+
+        voiceInitAttempts = 0;
         select.innerHTML = '';
         voices.forEach((v, i) => {
             const opt = document.createElement('option');
@@ -2128,10 +2209,10 @@
             opt.textContent = `${v.name} (${v.lang})`;
             select.appendChild(opt);
         });
-        // Prefer premium/enhanced voices
+        // Prefer premium/enhanced voices (Petra Premium, Anna Enhanced etc.)
         const preferred = voices.findIndex(v => {
             const n = v.name.toLowerCase();
-            return n.includes('premium') || n.includes('enhanced') || n.includes('neural') || n.includes('compact') === false;
+            return n.includes('premium') || n.includes('enhanced') || n.includes('petra');
         });
         if (preferred >= 0) select.value = preferred;
         driveVoice = voices[parseInt(select.value)] || voices[0];
@@ -2427,9 +2508,13 @@
         setTimeout(() => playDriveQuestion(), 500);
     }
 
-    // Init TTS voices (async in Chrome)
-    if (hasTTS && speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = initVoiceSelect;
+    // Init TTS voices (async in Chrome + iOS Safari)
+    if (hasTTS) {
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = initVoiceSelect;
+        }
+        // iOS Safari fallback: voices may never fire onvoiceschanged
+        setTimeout(initVoiceSelect, 100);
     }
 
     // ==================== INIT ====================
