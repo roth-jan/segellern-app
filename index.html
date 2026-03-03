@@ -2198,7 +2198,8 @@
     let driveWaitingForAnswer = false;
     let driveHistory = []; // {question, userAnswer, correct, isCorrect}
     let openaiVoice = localStorage.getItem('sbf_openai_voice') || 'nova';
-    let currentAudio = null; // for stopping OpenAI TTS playback
+    let currentAudioSource = null; // AudioBufferSourceNode for stopping
+    let audioCtx = null; // shared AudioContext, created on first user tap
     const hasTTS = typeof speechSynthesis !== 'undefined';
 
     function getGermanVoices() {
@@ -2260,8 +2261,18 @@
         localStorage.setItem('sbf_openai_voice', openaiVoice);
     }
 
-    // OpenAI TTS: text → mp3 audio blob → play
+    // Ensure AudioContext exists and is resumed (must be called from user gesture)
+    function ensureAudioCtx() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+    }
+
+    // OpenAI TTS: text → mp3 → AudioContext playback (works on iOS)
     function speakOpenAI(text) {
+        const ctx = ensureAudioCtx(); // must call during user gesture chain
         return new Promise(async (resolve) => {
             try {
                 const resp = await fetch('https://api.openai.com/v1/audio/speech', {
@@ -2278,15 +2289,17 @@
                     })
                 });
                 if (!resp.ok) throw new Error('TTS API error: ' + resp.status);
-                const blob = await resp.blob();
-                const url = URL.createObjectURL(blob);
-                const audio = new Audio(url);
-                currentAudio = audio;
-                audio.onended = () => { URL.revokeObjectURL(url); currentAudio = null; resolve(); };
-                audio.onerror = () => { URL.revokeObjectURL(url); currentAudio = null; resolve(); };
-                audio.play();
+                const arrayBuf = await resp.arrayBuffer();
+                const audioBuf = await ctx.decodeAudioData(arrayBuf);
+                const source = ctx.createBufferSource();
+                source.buffer = audioBuf;
+                source.connect(ctx.destination);
+                currentAudioSource = source;
+                source.onended = () => { currentAudioSource = null; resolve(); };
+                source.start(0);
             } catch (e) {
                 console.warn('OpenAI TTS failed, falling back to browser:', e);
+                currentAudioSource = null;
                 resolve(speakBrowser(text));
             }
         });
@@ -2316,7 +2329,7 @@
     }
 
     function stopTTS() {
-        if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+        try { if (currentAudioSource) { currentAudioSource.stop(); currentAudioSource = null; } } catch(e) {}
         if (hasTTS) speechSynthesis.cancel();
     }
 
