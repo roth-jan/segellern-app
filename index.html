@@ -2,8 +2,15 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SBF Lern-App - Binnen & See mit KI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SBF Navigator</title>
+    <meta name="description" content="Lern-App fuer den Sportbootfuehrerschein Binnen und See mit Quiz, Pruefungssimulation und Fahrmodus mit Sprachausgabe.">
+    <meta name="theme-color" content="#1a73e8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SBF Navigator">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-180.png">
     <style>
         :root {
             --primary: #1a73e8;
@@ -887,10 +894,41 @@
         .drive-feedback.correct { color: #81c784; background: rgba(76,175,80,0.1); }
         .drive-feedback.wrong { color: #ef9a9a; background: rgba(239,83,80,0.1); }
 
-        .drive-result { text-align: center; padding: 2rem 1rem; }
+        .drive-result { text-align: center; padding: 1.5rem 0.5rem; max-width: 700px; margin: 0 auto; }
         .drive-result h2 { color: #fff; font-size: 1.5rem; margin-bottom: 1rem; }
         .drive-result .drive-score-big { font-size: 3.5rem; font-weight: 700; color: var(--primary); }
         .drive-result p { color: #aaa; }
+
+        .drive-review { text-align: left; margin: 1.5rem 0; }
+        .drive-review-item {
+            padding: 0.85rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 10px;
+            border: 1px solid #333;
+            background: #2a2a3e;
+        }
+        .drive-review-item.wrong-item { border-color: #ef5350; background: rgba(239,83,80,0.08); }
+        .drive-review-item.correct-item { border-color: #4caf50; background: rgba(76,175,80,0.08); }
+        .drive-review-q { font-weight: 600; color: #e0e0e0; margin-bottom: 0.3rem; font-size: 0.95rem; }
+        .drive-review-a { font-size: 0.85rem; color: #aaa; }
+        .drive-review-a .correct-text { color: #81c784; }
+        .drive-review-a .wrong-text { color: #ef9a9a; }
+
+        .drive-btn-row {
+            display: flex; gap: 0.75rem; justify-content: center;
+            flex-wrap: wrap; margin-top: 1.5rem;
+        }
+        .drive-retry-btn {
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            background: #ef5350;
+            color: white;
+            cursor: pointer;
+        }
+        .drive-retry-btn:hover { background: #d32f2f; }
 
         @media (max-width: 768px) {
             .drive-question-text { font-size: 1.1rem; padding: 1rem; }
@@ -2067,6 +2105,7 @@
     let driveCorrect = 0;
     let driveVoice = null;
     let driveWaitingForAnswer = false;
+    let driveHistory = []; // {question, userAnswer, correct, isCorrect}
     const hasTTS = typeof speechSynthesis !== 'undefined';
 
     function getGermanVoices() {
@@ -2168,6 +2207,7 @@
         driveCorrect = 0;
         driveActive = true;
         driveWaitingForAnswer = false;
+        driveHistory = [];
 
         document.getElementById('drive-setup').classList.add('hidden');
         document.getElementById('drive-active').classList.remove('hidden');
@@ -2259,6 +2299,9 @@
         // Read explanation
         await driveSpeak(q.explanation);
 
+        // History tracken
+        driveHistory.push({ question: q, userAnswer: index, isCorrect: isCorrect });
+
         // Update stats
         stats.answered = (stats.answered || 0) + 1;
         if (isCorrect) stats.correct = (stats.correct || 0) + 1;
@@ -2281,19 +2324,107 @@
         document.getElementById('drive-active').classList.add('hidden');
         document.getElementById('drive-result').classList.remove('hidden');
 
-        const total = driveIndex;
-        const pct = total > 0 ? Math.round((driveCorrect / total) * 100) : 0;
+        const total = driveHistory.length;
+        const correct = driveHistory.filter(h => h.isCorrect).length;
+        const wrong = driveHistory.filter(h => !h.isCorrect);
+        const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+        // Themen-Statistik
+        const topicStats = {};
+        driveHistory.forEach(h => {
+            const tid = h.question.topic;
+            if (!topicStats[tid]) topicStats[tid] = { correct: 0, total: 0 };
+            topicStats[tid].total++;
+            if (h.isCorrect) topicStats[tid].correct++;
+        });
+
+        const topicName = (tid) => {
+            const t = topics[currentLicense].find(tp => tp.id === tid);
+            return t ? `${t.icon} ${t.name}` : tid;
+        };
+
+        let topicHtml = Object.entries(topicStats).map(([tid, s]) => {
+            const tpct = Math.round((s.correct / s.total) * 100);
+            const color = tpct >= 80 ? '#81c784' : tpct >= 50 ? '#ffcc80' : '#ef9a9a';
+            return `<div style="display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid #333;">
+                <span>${topicName(tid)}</span>
+                <span style="color: ${color}; font-weight: 600;">${s.correct}/${s.total} (${tpct}%)</span>
+            </div>`;
+        }).join('');
+
+        // Einzelne Fragen (falsche zuerst)
+        const sorted = [...driveHistory].sort((a, b) => a.isCorrect - b.isCorrect);
+        let reviewHtml = sorted.map((h, i) => {
+            const q = h.question;
+            const cls = h.isCorrect ? 'correct-item' : 'wrong-item';
+            const icon = h.isCorrect ? '✅' : '❌';
+            let detail = '';
+            if (!h.isCorrect) {
+                detail = `<div class="drive-review-a">
+                    Deine Antwort: <span class="wrong-text">${q.options[h.userAnswer]}</span><br>
+                    Richtig: <span class="correct-text">${q.options[q.correct]}</span>
+                </div>`;
+            } else {
+                detail = `<div class="drive-review-a"><span class="correct-text">${q.options[q.correct]}</span></div>`;
+            }
+            return `<div class="drive-review-item ${cls}">
+                <div class="drive-review-q">${icon} ${q.q}</div>
+                ${detail}
+            </div>`;
+        }).join('');
+
+        const wrongCount = wrong.length;
 
         document.getElementById('drive-result-content').innerHTML = `
-            <div style="font-size: 4rem; margin-bottom: 1rem;">${pct >= 80 ? '🎉' : '📚'}</div>
+            <div style="font-size: 4rem; margin-bottom: 0.5rem;">${pct >= 80 ? '🎉' : '📚'}</div>
             <div class="drive-score-big">${pct}%</div>
-            <p style="font-size: 1.2rem; margin: 1rem 0 2rem;">
-                ${driveCorrect} von ${total} Fragen richtig
+            <p style="font-size: 1.1rem; margin: 0.5rem 0 1.5rem;">
+                ${correct} von ${total} Fragen richtig${wrongCount > 0 ? ` — <span style="color: #ef9a9a;">${wrongCount} zum Wiederholen</span>` : ''}
             </p>
-            <button class="drive-start-btn" onclick="renderDriveSetup()" style="max-width: 400px; margin: 0 auto;">
-                Nochmal starten
-            </button>
+
+            <div style="background: #2a2a3e; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; text-align: left;">
+                <h3 style="color: #fff; font-size: 1rem; margin-bottom: 0.5rem;">Themen-Uebersicht</h3>
+                ${topicHtml}
+            </div>
+
+            <details style="text-align: left; margin-bottom: 1rem;">
+                <summary style="cursor: pointer; font-weight: 600; color: #aaa; padding: 0.75rem; background: #2a2a3e; border-radius: 10px;">
+                    Alle ${total} Fragen anzeigen (${wrongCount} falsch)
+                </summary>
+                <div class="drive-review" style="margin-top: 0.5rem;">
+                    ${reviewHtml}
+                </div>
+            </details>
+
+            <div class="drive-btn-row">
+                ${wrongCount > 0 ? `<button class="drive-retry-btn" onclick="retryWrongQuestions()">
+                    ${wrongCount} falsche wiederholen
+                </button>` : ''}
+                <button class="drive-start-btn" onclick="renderDriveSetup()" style="max-width: 300px;">
+                    Neues Quiz
+                </button>
+            </div>
         `;
+    }
+
+    function retryWrongQuestions() {
+        const wrongQs = driveHistory.filter(h => !h.isCorrect).map(h => h.question);
+        if (wrongQs.length === 0) return;
+
+        onDriveVoiceChange();
+        shuffleArray(wrongQs);
+        driveQuiz = wrongQs;
+        driveIndex = 0;
+        driveCorrect = 0;
+        driveActive = true;
+        driveWaitingForAnswer = false;
+        driveHistory = [];
+
+        document.getElementById('drive-setup').classList.add('hidden');
+        document.getElementById('drive-result').classList.add('hidden');
+        document.getElementById('drive-active').classList.remove('hidden');
+
+        setTimeout(() => playDriveQuestion(), 500);
     }
 
     // Init TTS voices (async in Chrome)
@@ -2303,6 +2434,11 @@
 
     // ==================== INIT ====================
     renderDashboard();
+
+    // Service Worker registrieren (PWA + Offline)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
     </script>
 </body>
 </html>
