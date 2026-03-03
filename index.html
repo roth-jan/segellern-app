@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBF Lern-App - Binnen & See mit KI</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #1557b0;
+            --secondary: #34a853;
+            --accent: #fbbc04;
+            --danger: #ea4335;
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #202124;
+            --text-light: #5f6368;
+            --border: #dadce0;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .navbar-brand svg { width: 32px; height: 32px; }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.25rem;
+            background: var(--bg);
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .nav-tab {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover { background: rgba(26,115,232,0.08); color: var(--primary); }
+        .nav-tab.active { background: var(--primary); color: white; }
+
+        .nav-settings {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .license-toggle {
+            display: flex;
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 3px;
+            border: 1px solid var(--border);
+        }
+
+        .license-btn {
+            padding: 0.35rem 0.75rem;
+            border: none;
+            background: transparent;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            color: var(--text-light);
+        }
+
+        .license-btn.active { background: var(--primary); color: white; }
+        .license-btn.binnen.active { background: #0d47a1; }
+        .license-btn.see.active { background: #01579b; }
+
+        /* Main Content */
+        .main { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* Dashboard */
+        .welcome-banner {
+            background: linear-gradient(135deg, #1a73e8 0%, #4285f4 50%, #01579b 100%);
+            color: white;
+            padding: 2rem 2.5rem;
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-banner::after {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: -20px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+
+        .welcome-banner h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
+        .welcome-banner p { opacity: 0.9; font-size: 1rem; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card .stat-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .stat-card .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--primary); }
+        .stat-card .stat-label { font-size: 0.85rem; color: var(--text-light); margin-top: 0.25rem; }
+
+        .progress-bar-container {
+            background: var(--border);
+            border-radius: 10px;
+            height: 8px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.5s ease;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+        }
+
+        .card h2 { font-size: 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card h3 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+
+        /* Topic Grid */
+        .topic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .topic-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .topic-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            border-color: var(--primary);
+        }
+
+        .topic-card .topic-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .topic-card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .topic-card p { font-size: 0.85rem; color: var(--text-light); }
+        .topic-card .topic-count {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--bg);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        /* Quiz */
+        .quiz-container { max-width: 800px; margin: 0 auto; }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .quiz-progress {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .quiz-progress-bar {
+            width: 200px;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .quiz-progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .question-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .question-number {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .answer-options { display: flex; flex-direction: column; gap: 0.75rem; }
+
+        .answer-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--card);
+        }
+
+        .answer-option:hover { border-color: var(--primary); background: rgba(26,115,232,0.04); }
+
+        .answer-option.selected { border-color: var(--primary); background: rgba(26,115,232,0.08); }
+
+        .answer-option.correct {
+            border-color: var(--secondary);
+            background: rgba(52,168,83,0.08);
+        }
+
+        .answer-option.wrong {
+            border-color: var(--danger);
+            background: rgba(234,67,53,0.08);
+        }
+
+        .answer-letter {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            border: 2px solid var(--border);
+        }
+
+        .answer-option.selected .answer-letter { background: var(--primary); color: white; border-color: var(--primary); }
+        .answer-option.correct .answer-letter { background: var(--secondary); color: white; border-color: var(--secondary); }
+        .answer-option.wrong .answer-letter { background: var(--danger); color: white; border-color: var(--danger); }
+
+        .answer-text { flex: 1; }
+
+        .explanation-box {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            border-radius: 10px;
+            background: #e8f5e9;
+            border: 1px solid #a5d6a7;
+            display: none;
+        }
+
+        .explanation-box.wrong-explanation { background: #fce4ec; border-color: #ef9a9a; }
+
+        .explanation-box h4 { margin-bottom: 0.5rem; }
+
+        .quiz-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            gap: 1rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.65rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--border); }
+        .btn-success { background: var(--secondary); color: white; }
+        .btn-success:hover { background: #2d9249; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #d33426; }
+        .btn-lg { padding: 0.85rem 2rem; font-size: 1.05rem; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* AI Chat */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 180px);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .chat-header-info {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.25rem 1.5rem;
+            border-radius: var(--radius) var(--radius) 0 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .chat-header-info .chat-avatar {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            background: var(--card);
+            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 0.75rem;
+            max-width: 85%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .chat-message.user { align-self: flex-end; flex-direction: row-reverse; }
+
+        .chat-message .msg-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .chat-message.ai .msg-avatar { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .chat-message.user .msg-avatar { background: var(--primary); color: white; }
+
+        .chat-message .msg-bubble {
+            padding: 0.85rem 1.15rem;
+            border-radius: 16px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .chat-message.ai .msg-bubble {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-top-left-radius: 4px;
+        }
+
+        .chat-message.user .msg-bubble {
+            background: var(--primary);
+            color: white;
+            border-top-right-radius: 4px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 0 0 var(--radius) var(--radius);
+            border-top: none;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+
+        .chat-input:focus { border-color: var(--primary); }
+
+        .chat-send {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .chat-send:hover { background: var(--primary-dark); }
+        .chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .api-key-banner {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .api-key-banner input {
+            flex: 1;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        /* Learning Cards */
+        .learn-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+        }
+
+        .learn-card-header {
+            padding: 1rem 1.25rem;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .learn-card-header h3 { font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+
+        .learn-card-body {
+            padding: 1.25rem;
+            display: none;
+        }
+
+        .learn-card.open .learn-card-body { display: block; }
+        .learn-card.open .learn-card-header .arrow { transform: rotate(180deg); }
+
+        .arrow { transition: transform 0.2s; font-size: 0.8rem; }
+
+        /* Quiz Result */
+        .result-container {
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+
+        .result-icon { font-size: 5rem; margin-bottom: 1rem; }
+        .result-score { font-size: 3rem; font-weight: 700; color: var(--primary); }
+        .result-text { font-size: 1.2rem; color: var(--text-light); margin: 0.5rem 0 2rem; }
+
+        .result-details {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .result-detail { text-align: center; }
+        .result-detail .value { font-size: 1.5rem; font-weight: 700; }
+        .result-detail .label { font-size: 0.85rem; color: var(--text-light); }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .quick-action {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: var(--text);
+            box-shadow: var(--shadow);
+        }
+
+        .quick-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .quick-action .qa-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .quick-action .qa-text h4 { font-size: 0.95rem; }
+        .quick-action .qa-text p { font-size: 0.8rem; color: var(--text-light); }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 0.5rem;
+            align-items: center;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-light);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-8px); opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar { flex-wrap: wrap; gap: 0.5rem; padding: 0.5rem 1rem; }
+            .nav-tabs { overflow-x: auto; width: 100%; order: 3; }
+            .nav-tab { font-size: 0.8rem; padding: 0.4rem 0.75rem; }
+            .welcome-banner { padding: 1.5rem; }
+            .welcome-banner h1 { font-size: 1.35rem; }
+            .main { padding: 1rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .chat-container { height: calc(100vh - 220px); }
+            .quiz-actions { flex-direction: column; }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-light); }
+
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .suggestion-chip {
+            padding: 0.4rem 0.85rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+
+        .suggestion-chip:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .hidden { display: none !important; }
+
+        /* Exam timer */
+        .exam-timer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            padding: 0.5rem 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .exam-timer.warning { color: var(--danger); border-color: var(--danger); }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a class="navbar-brand" onclick="showPage('dashboard')">
+            <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="15" stroke="#1a73e8" stroke-width="2"/><path d="M16 4 L16 16 L24 20" stroke="#1a73e8" stroke-width="2" stroke-linecap="round"/><path d="M8 26 Q16 20 24 26" stroke="#1a73e8" stroke-width="2" fill="none"/></svg>
+            SBF Navigator
+        </a>
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showPage('dashboard')" data-page="dashboard">Dashboard</button>
+            <button class="nav-tab" onclick="showPage('lernen')" data-page="lernen">Lernen</button>
+            <button class="nav-tab" onclick="showPage('quiz')" data-page="quiz">Quiz</button>
+            <button class="nav-tab" onclick="showPage('pruefung')" data-page="pruefung">Pruefung</button>
+            <button class="nav-tab" onclick="showPage('ki-chat')" data-page="ki-chat">KI-Assistent</button>
+        </div>
+        <div class="nav-settings">
+            <div class="license-toggle">
+                <button class="license-btn binnen active" onclick="setLicense('binnen')">Binnen</button>
+                <button class="license-btn see" onclick="setLicense('see')">See</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main">
+        <!-- ==================== DASHBOARD ==================== -->
+        <div id="page-dashboard" class="page active">
+            <div class="welcome-banner">
+                <h1>Willkommen beim SBF Navigator!</h1>
+                <p>Deine KI-gestuetzte Lern-App fuer den Sportbootfuehrerschein Binnen & See</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📝</div>
+                    <div class="stat-value" id="stat-answered">0</div>
+                    <div class="stat-label">Fragen beantwortet</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value" id="stat-correct">0%</div>
+                    <div class="stat-label">Richtig beantwortet</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📚</div>
+                    <div class="stat-value" id="stat-topics">0/15</div>
+                    <div class="stat-label">Themen gelernt</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value" id="stat-ready">Nicht bereit</div>
+                    <div class="stat-label">Pruefungsbereit</div>
+                </div>
+            </div>
+
+            <h2 style="margin-bottom: 1rem;">Schnellstart</h2>
+            <div class="quick-actions">
+                <div class="quick-action" onclick="showPage('quiz'); startQuickQuiz()">
+                    <div class="qa-icon" style="background: #e3f2fd;">🎲</div>
+                    <div class="qa-text">
+                        <h4>Schnelles Quiz</h4>
+                        <p>10 zufaellige Fragen</p>
+                    </div>
+                </div>
+                <div class="quick-action" onclick="showPage('ki-chat')">
+                    <div class="qa-icon" style="background: #f3e5f5;">🤖</div>
+                    <div class="qa-text">
+                        <h4>KI fragen</h4>
+                        <p>Stelle eine Frage zur Navigation</p>
+                    </div>
+                </div>
+                <div class="quick-action" onclick="showPage('pruefung'); startExam()">
+                    <div class="qa-icon" style="background: #fff3e0;">📋</div>
+                    <div class="qa-text">
+                        <h4>Pruefungssimulation</h4>
+                        <p>Echte Pruefungsbedingungen</p>
+                    </div>
+                </div>
+                <div class="quick-action" onclick="showPage('lernen')">
+                    <div class="qa-icon" style="background: #e8f5e9;">📖</div>
+                    <div class="qa-text">
+                        <h4>Themen lernen</h4>
+                        <p>Alle Themengebiete</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📊 Lernfortschritt</h2>
+                <div id="progress-overview"></div>
+            </div>
+        </div>
+
+        <!-- ==================== LERNEN ==================== -->
+        <div id="page-lernen" class="page">
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h2>📖 Themengebiete - <span id="learn-license-label">SBF Binnen</span></h2>
+                <p style="color: var(--text-light);">Waehle ein Thema zum Lernen. Klicke auf eine Karte um die Lernmaterialien zu oeffnen.</p>
+            </div>
+            <div class="topic-grid" id="topic-grid"></div>
+
+            <!-- Topic Detail View -->
+            <div id="topic-detail" class="hidden">
+                <button class="btn btn-secondary" onclick="showTopicGrid()" style="margin-bottom: 1rem;">← Zurueck zu Themen</button>
+                <div id="topic-detail-content"></div>
+            </div>
+        </div>
+
+        <!-- ==================== QUIZ ==================== -->
+        <div id="page-quiz" class="page">
+            <div class="quiz-container">
+                <div id="quiz-setup">
+                    <div class="card">
+                        <h2>🎯 Quiz starten</h2>
+                        <p style="color: var(--text-light); margin-bottom: 1.5rem;">Waehle deine Quiz-Einstellungen:</p>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Themengebiet:</label>
+                            <select id="quiz-topic" style="width: 100%; padding: 0.65rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem;">
+                                <option value="all">Alle Themen</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Anzahl Fragen:</label>
+                            <div style="display: flex; gap: 0.75rem;">
+                                <button class="btn btn-secondary quiz-count-btn active" onclick="setQuizCount(10, this)">10</button>
+                                <button class="btn btn-secondary quiz-count-btn" onclick="setQuizCount(20, this)">20</button>
+                                <button class="btn btn-secondary quiz-count-btn" onclick="setQuizCount(30, this)">30</button>
+                                <button class="btn btn-secondary quiz-count-btn" onclick="setQuizCount(0, this)">Alle</button>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Modus:</label>
+                            <div style="display: flex; gap: 0.75rem;">
+                                <button class="btn btn-secondary quiz-mode-btn active" onclick="setQuizMode('learn', this)">Lernmodus</button>
+                                <button class="btn btn-secondary quiz-mode-btn" onclick="setQuizMode('exam', this)">Pruefungsmodus</button>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary btn-lg" onclick="startQuiz()" style="width: 100%;">Quiz starten</button>
+                    </div>
+                </div>
+
+                <div id="quiz-active" class="hidden">
+                    <div class="quiz-header">
+                        <div class="quiz-progress">
+                            <span id="quiz-counter">Frage 1/10</span>
+                            <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quiz-progress-fill"></div></div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span id="quiz-score" style="font-weight: 600;">0 richtig</span>
+                            <button class="btn btn-secondary" onclick="endQuiz()" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">Beenden</button>
+                        </div>
+                    </div>
+                    <div id="quiz-question-area"></div>
+                </div>
+
+                <div id="quiz-result" class="hidden">
+                    <div class="card">
+                        <div class="result-container" id="quiz-result-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PRUEFUNG ==================== -->
+        <div id="page-pruefung" class="page">
+            <div class="quiz-container">
+                <div id="exam-setup">
+                    <div class="card" style="text-align: center;">
+                        <h2 style="justify-content: center;">📋 Pruefungssimulation</h2>
+                        <p style="color: var(--text-light); margin: 1rem 0 2rem;">Simuliere die echte Pruefung unter realen Bedingungen.</p>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; max-width: 500px; margin: 0 auto 2rem;">
+                            <div class="stat-card">
+                                <div class="stat-value" id="exam-question-count">30</div>
+                                <div class="stat-label">Fragen</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="exam-time-limit">60 Min</div>
+                                <div class="stat-label">Zeitlimit</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="exam-pass-rate">80%</div>
+                                <div class="stat-label">Bestehensgrenze</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="exam-license-type">Binnen</div>
+                                <div class="stat-label">Fuehrerschein</div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary btn-lg" onclick="startExam()">Pruefung starten</button>
+                    </div>
+                </div>
+
+                <div id="exam-active" class="hidden">
+                    <div class="quiz-header">
+                        <div class="quiz-progress">
+                            <span id="exam-counter">Frage 1/30</span>
+                            <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="exam-progress-fill"></div></div>
+                        </div>
+                        <div class="exam-timer" id="exam-timer">⏱ 60:00</div>
+                    </div>
+                    <div id="exam-question-area"></div>
+                    <div class="quiz-actions" style="margin-top: 1rem;">
+                        <button class="btn btn-secondary" id="exam-prev-btn" onclick="examPrev()" disabled>← Zurueck</button>
+                        <span id="exam-nav-info" style="color: var(--text-light); font-size: 0.9rem;"></span>
+                        <button class="btn btn-primary" id="exam-next-btn" onclick="examNext()">Weiter →</button>
+                    </div>
+                </div>
+
+                <div id="exam-result" class="hidden">
+                    <div class="card">
+                        <div class="result-container" id="exam-result-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== KI-CHAT ==================== -->
+        <div id="page-ki-chat" class="page">
+            <div id="api-key-setup" class="api-key-banner">
+                <div style="font-size: 1.5rem;">🔑</div>
+                <div style="flex: 1;">
+                    <h4 style="margin-bottom: 0.25rem;">Claude API-Key eingeben</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 0.75rem;">
+                        Fuer die KI-Funktion brauchst du einen Anthropic API-Key.
+                        Dein Key wird nur lokal in deinem Browser gespeichert.
+                        <strong>Ohne Key steht dir ein integriertes Wissens-System zur Verfuegung.</strong>
+                    </p>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="password" id="api-key-input" placeholder="sk-ant-..." style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px;">
+                        <button class="btn btn-primary" onclick="saveApiKey()">Speichern</button>
+                        <button class="btn btn-secondary" onclick="dismissApiKey()">Ohne KI fortfahren</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-header-info">
+                    <div class="chat-avatar">🧭</div>
+                    <div>
+                        <h3 style="font-size: 1.1rem;">Navigation KI-Assistent</h3>
+                        <p style="font-size: 0.85rem; opacity: 0.85;" id="chat-mode-label">Wissens-Modus (Offline)</p>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-message ai">
+                        <div class="msg-avatar">🧭</div>
+                        <div>
+                            <div class="msg-bubble">
+                                Ahoi! Ich bin dein Navigation-Lernassistent. Ich helfe dir bei allen Fragen rund um den Sportbootfuehrerschein Binnen und See. Du kannst mich alles fragen - von Verkehrsregeln ueber Wetterkunde bis zu Knotentechnik!
+                            </div>
+                            <div class="suggestion-chips">
+                                <span class="suggestion-chip" onclick="askSuggestion(this)">Was sind die Lichter eines Motorboots?</span>
+                                <span class="suggestion-chip" onclick="askSuggestion(this)">Erklaere die Vorfahrtsregeln</span>
+                                <span class="suggestion-chip" onclick="askSuggestion(this)">Welche Knoten muss ich kennen?</span>
+                                <span class="suggestion-chip" onclick="askSuggestion(this)">Was bedeutet KVR?</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="chat-input" placeholder="Stelle eine Frage zur Navigation..." onkeypress="if(event.key==='Enter')sendMessage()">
+                    <button class="chat-send" onclick="sendMessage()" id="chat-send-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    // ==================== STATE ====================
+    let currentLicense = 'binnen';
+    let currentPage = 'dashboard';
+    let quizCount = 10;
+    let quizMode = 'learn';
+    let currentQuiz = [];
+    let currentQuizIndex = 0;
+    let quizCorrect = 0;
+    let quizAnswered = 0;
+    let examTimer = null;
+    let examTimeLeft = 0;
+    let examAnswers = {};
+    let apiKey = localStorage.getItem('sbf_api_key') || '';
+
+    // Stats
+    let stats = JSON.parse(localStorage.getItem('sbf_stats') || '{}');
+    if (!stats.answered) stats = { answered: 0, correct: 0, topicsLearned: [], quizHistory: [] };
+
+    // ==================== QUESTION DATABASE ====================
+    const questions = {
+        binnen: [
+            // Verkehrsregeln
+            { id: 'b1', topic: 'verkehrsregeln', q: 'Welches Fahrzeug hat auf Binnenschifffahrtsstrassen grundsaetzlich Vorfahrt?', options: ['Kleinfahrzeuge', 'Fahrzeuge der Berufsschifffahrt', 'Sportboote mit Motor', 'Segelboote'], correct: 1, explanation: 'Auf Binnenschifffahrtsstrassen hat die Berufsschifffahrt (Grossschifffahrt) grundsaetzlich Vorfahrt vor Kleinfahrzeugen.' },
+            { id: 'b2', topic: 'verkehrsregeln', q: 'Was bedeutet ein langer Ton (Dauer ca. 4 Sekunden)?', options: ['Achtungssignal', 'Notsignal', 'Ueberholsignal', 'Wendesignal'], correct: 0, explanation: 'Ein langer Ton ist das allgemeine Achtungssignal in der Binnenschifffahrt.' },
+            { id: 'b3', topic: 'verkehrsregeln', q: 'Wie verhalten Sie sich beim Begegnen auf einem Kanal?', options: ['Steuerbord an Steuerbord', 'Backbord an Backbord', 'Der Schnellere hat Vorfahrt', 'Immer anhalten'], correct: 0, explanation: 'Auf Kanaelen gilt das Rechtsfahrgebot. Fahrzeuge begegnen sich Steuerbord an Steuerbord (rechts an rechts).' },
+            { id: 'b4', topic: 'verkehrsregeln', q: 'Was bedeutet ein kurzer Ton?', options: ['Ich aendere meinen Kurs nach Steuerbord', 'Ich aendere meinen Kurs nach Backbord', 'Achtung', 'Ich fahre rueckwaerts'], correct: 0, explanation: 'Ein kurzer Ton bedeutet: Ich richte meinen Kurs nach Steuerbord.' },
+            { id: 'b5', topic: 'verkehrsregeln', q: 'Was zeigt ein Fahrzeug, das nicht ausweichen kann?', options: ['Rote Flagge', 'Einen roten Ball', 'Blaue Tafel mit weissem Blinklicht', 'Zwei gruene Lichter'], correct: 2, explanation: 'Die blaue Tafel mit weissem Funkellicht zeigt an, dass ein Fahrzeug die Vorbeifahrt an der Seite der blauen Tafel wuenscht.' },
+            { id: 'b6', topic: 'verkehrsregeln', q: 'Wie lautet das Schallsignal beim Ueberholen auf der Steuerbordseite?', options: ['Zwei lange, zwei kurze Toene', 'Zwei lange, ein kurzer Ton', 'Ein langer, ein kurzer Ton', 'Drei kurze Toene'], correct: 0, explanation: 'Zwei lange und zwei kurze Toene bedeuten: Ich will auf Ihrer Steuerbordseite ueberholen.' },
+            { id: 'b7', topic: 'verkehrsregeln', q: 'Was bedeuten drei kurze Toene?', options: ['Meine Maschine geht rueckwaerts', 'Ich kann nicht ausweichen', 'Ich uebere hole', 'Notsignal'], correct: 0, explanation: 'Drei kurze Toene bedeuten: Meine Maschine geht rueckwaerts.' },
+            { id: 'b8', topic: 'verkehrsregeln', q: 'Welche Hoechstgeschwindigkeit gilt in der Regel auf Binnenschifffahrtsstrassen fuer Kleinfahrzeuge?', options: ['6 km/h', '10 km/h', '12 km/h', 'Keine einheitliche Regelung'], correct: 3, explanation: 'Es gibt keine einheitliche Hoechstgeschwindigkeit auf Binnenschifffahrtsstrassen. Sie variiert je nach Gewaesser und wird durch Schilder angezeigt.' },
+
+            // Lichter und Zeichen
+            { id: 'b9', topic: 'lichter', q: 'Welche Lichter fuehrt ein Kleinfahrzeug mit Maschinenantrieb unter 20m bei Nacht?', options: ['Nur ein weisses Rundumlicht', 'Topplicht, Seitenlichter und Hecklicht', 'Ein weisses Topplicht und Seitenlichter', 'Topplicht und Seitenlichter oder ein weisses Rundumlicht'], correct: 3, explanation: 'Kleinfahrzeuge mit Maschinenantrieb unter 20m koennen entweder Topplicht und Seitenlichter oder ein weisses Rundumlicht fuehren.' },
+            { id: 'b10', topic: 'lichter', q: 'Was bedeutet ein rotes Licht am rechten Ufer?', options: ['Durchfahrt verboten', 'Einfahrt in den Hafen', 'Stromabwaerts fahren', 'Fahrwasser nach rechts'], correct: 0, explanation: 'Ein festes rotes Licht am Ufer bedeutet Durchfahrt verboten.' },
+            { id: 'b11', topic: 'lichter', q: 'Welche Farbe hat das Backbordlicht?', options: ['Gruen', 'Rot', 'Weiss', 'Gelb'], correct: 1, explanation: 'Das Backbordlicht (links) ist rot. Merkhilfe: Rot ist links, wie beim Portwein (Backbord = Port).' },
+            { id: 'b12', topic: 'lichter', q: 'Welche Farbe hat das Steuerbordlicht?', options: ['Rot', 'Weiss', 'Gruen', 'Gelb'], correct: 2, explanation: 'Das Steuerbordlicht (rechts) ist gruen.' },
+            { id: 'b13', topic: 'lichter', q: 'Was bedeutet ein gelbes Funkellicht am Ufer?', options: ['Ankern verboten', 'Faehrstelle', 'Gefahrstelle', 'Schleuse in Betrieb'], correct: 1, explanation: 'Ein gelbes Funkellicht am Ufer kennzeichnet eine Faehrstelle.' },
+
+            // Sicherheit
+            { id: 'b14', topic: 'sicherheit', q: 'Welche Rettungsmittel muessen auf einem Sportboot mitgefuehrt werden?', options: ['Rettungsweste fuer jede Person an Bord', 'Nur ein Rettungsring', 'Nur eine Rettungsinsel', 'Keine Pflicht'], correct: 0, explanation: 'Fuer jede Person an Bord muss eine geeignete Rettungsweste vorhanden sein.' },
+            { id: 'b15', topic: 'sicherheit', q: 'Was ist beim Tanken von Sportbooten zu beachten?', options: ['Fenster oeffnen', 'Alle elektrischen Geraete ausschalten und kein offenes Feuer', 'Motor laufen lassen', 'Nur an bestimmten Wochentagen tanken'], correct: 1, explanation: 'Beim Tanken muessen alle Zündquellen ausgeschaltet sein und es darf kein offenes Feuer geben. Explosionsgefahr!' },
+            { id: 'b16', topic: 'sicherheit', q: 'Was tun Sie bei Mann ueber Bord?', options: ['Sofort wenden und Person ansteuern', 'Sofort den Rettungsdienst rufen', 'Rettungsmittel zuwerfen, Position markieren, Rettungsmanoever einleiten', 'Weiterfahren und spaeter zurueckkehren'], correct: 2, explanation: 'Bei Mann ueber Bord: Sofort Rettungsmittel zuwerfen, "Mann ueber Bord" rufen, Position markieren, und Rettungsmanoever einleiten.' },
+            { id: 'b17', topic: 'sicherheit', q: 'Welchen Feuerloecher sollte man auf einem Boot haben?', options: ['Nur Wasserloescher', 'ABC-Pulverloescher oder CO2-Loescher', 'Nur Schaumloescher', 'Keinen, das Boot schwimmt ja'], correct: 1, explanation: 'ABC-Pulverloescher oder CO2-Loescher sind fuer Boote geeignet. Wasserloescher sind bei Treibstoffbraenden gefaehrlich.' },
+
+            // Wetterkunde
+            { id: 'b18', topic: 'wetter', q: 'Was deutet auf ein nahendes Gewitter hin?', options: ['Gleichmaessiger Wind', 'Dunkle Cumulonimbus-Wolken, boiger Wind, fallender Luftdruck', 'Steigende Temperatur', 'Klarer Himmel'], correct: 1, explanation: 'Dunkle Cumulonimbus-Wolken (Gewitterwolken), boiger Wind und schnell fallender Luftdruck deuten auf ein nahendes Gewitter hin.' },
+            { id: 'b19', topic: 'wetter', q: 'Was bedeutet Windstaerke 6 nach Beaufort?', options: ['Leichte Brise', 'Maessiger Wind', 'Starker Wind', 'Sturm'], correct: 2, explanation: 'Windstaerke 6 Beaufort bedeutet starker Wind (39-49 km/h). Groessere Aeste bewegen sich, Wellenkamm brechen.' },
+            { id: 'b20', topic: 'wetter', q: 'Was ist eine Boe?', options: ['Ein kurzzeitiger starker Windstoss', 'Eine Meeresstroemung', 'Ein Nebel', 'Ein Wasserwirbel'], correct: 0, explanation: 'Eine Boe ist ein kurzzeitiger, kraeftiger Windstoss, der ploetzlich auftritt und gefaehrlich sein kann.' },
+
+            // Knoten
+            { id: 'b21', topic: 'knoten', q: 'Wofuer verwendet man den Palstek?', options: ['Zum Festmachen', 'Zum Verbinden zweier Leinen', 'Um ein Auge zu bilden, das sich nicht zuzieht', 'Zum Verkuerzen einer Leine'], correct: 2, explanation: 'Der Palstek bildet ein festes Auge, das sich unter Belastung nicht zusammenzieht. Er ist einer der wichtigsten Knoten in der Schifffahrt.' },
+            { id: 'b22', topic: 'knoten', q: 'Welcher Knoten eignet sich zum Verbinden zweier gleich dicker Leinen?', options: ['Kreuzknoten', 'Palstek', 'Webeleinstek', 'Rundtoern mit zwei halben Schlaegen'], correct: 0, explanation: 'Der Kreuzknoten (Reffknoten) verbindet zwei gleich dicke Leinen. Er ist leicht zu loesen.' },
+            { id: 'b23', topic: 'knoten', q: 'Wofuer wird der Webeleinstek verwendet?', options: ['Zum Festmachen an einem Ring', 'Zum Festmachen an einem Pfahl oder Relingstuetze', 'Zum Spleissen', 'Zum Verbinden zweier Leinen'], correct: 1, explanation: 'Der Webeleinstek dient zum Festmachen an Pfaehlen, Stangen oder Relingstuetzen. Er haelt durch Zug sicher.' },
+            { id: 'b24', topic: 'knoten', q: 'Wie heisst der Knoten zum Belegen einer Klampe?', options: ['Klampenknoten (Belegen auf Slip)', 'Palstek', 'Achtknoten', 'Schotstek'], correct: 0, explanation: 'Beim Belegen einer Klampe wird die Leine kreuzweise um die Klampe gelegt und mit einem Kopfschlag gesichert (auf Slip zum schnellen Loesen).' },
+
+            // Umwelt
+            { id: 'b25', topic: 'umwelt', q: 'Was gilt beim Naturschutz auf Binnengewaessern?', options: ['Schilfzonen duerfen befahren werden', 'Abstand zu Schilfzonen und Brutgebieten halten', 'Nur im Winter Ruecksicht nehmen', 'Es gibt keine besonderen Regeln'], correct: 1, explanation: 'Sportboote muessen ausreichend Abstand zu Schilfzonen, Brutgebieten und Naturschutzgebieten halten.' },
+            { id: 'b26', topic: 'umwelt', q: 'Was darf nicht ins Wasser eingeleitet werden?', options: ['Nur Oel', 'Nur Faekalien', 'Oelhaltiges Wasser, Abfaelle, Faekalien und Chemikalien', 'Es gibt keine Einschraenkungen'], correct: 2, explanation: 'Es ist streng verboten, Oel, oelhaltiges Wasser, Abfaelle, Faekalien oder Chemikalien ins Gewaesser einzuleiten.' },
+
+            // Seemannschaft
+            { id: 'b27', topic: 'seemannschaft', q: 'Was bedeutet Lee?', options: ['Die dem Wind zugewandte Seite', 'Die dem Wind abgewandte Seite', 'Die Bugseite', 'Die Heckseite'], correct: 1, explanation: 'Lee ist die dem Wind abgewandte Seite. Luv ist die dem Wind zugewandte Seite. Merkhilfe: Spuckst du nach Luv, kommts zurueck.' },
+            { id: 'b28', topic: 'seemannschaft', q: 'Was ist der Tiefgang eines Bootes?', options: ['Die Laenge des Bootes', 'Der Abstand von der Wasserlinie bis zum tiefsten Punkt', 'Die Hoehe des Mastes', 'Die Breite des Bootes'], correct: 1, explanation: 'Der Tiefgang ist der senkrechte Abstand von der Wasserlinie bis zum tiefsten Punkt des Bootes (Kiel).' },
+            { id: 'b29', topic: 'seemannschaft', q: 'Was ist Backbord?', options: ['Die rechte Seite des Schiffes', 'Die linke Seite des Schiffes in Fahrtrichtung', 'Der hintere Teil des Schiffes', 'Der Bug'], correct: 1, explanation: 'Backbord ist die linke Seite des Schiffes in Fahrtrichtung gesehen. Das Backbordlicht ist rot.' },
+            { id: 'b30', topic: 'seemannschaft', q: 'Was bedeutet "achteraus"?', options: ['Nach vorne', 'Nach hinten', 'Nach links', 'Nach oben'], correct: 1, explanation: 'Achteraus bedeutet hinter dem Schiff, in die entgegengesetzte Richtung der Fahrtrichtung.' },
+        ],
+        see: [
+            // KVR (Kollisionsverhuetungsregeln)
+            { id: 's1', topic: 'kvr', q: 'Was regeln die KVR?', options: ['Nur Segelregeln', 'Verhalten auf See zur Verhuetung von Zusammenstoessen', 'Hafenordnungen', 'Fischfangbestimmungen'], correct: 1, explanation: 'Die Kollisionsverhuetungsregeln (KVR) regeln das Verhalten von Fahrzeugen auf See zur Verhuetung von Zusammenstoessen.' },
+            { id: 's2', topic: 'kvr', q: 'Wer ist nach KVR ausweichpflichtig, wenn ein Segelboot und ein Motorboot sich auf Kollisionskurs befinden?', options: ['Immer das Segelboot', 'Immer das Motorboot', 'Das Motorboot, ausser es ist manoevrierunfaehig', 'Das kleinere Fahrzeug'], correct: 2, explanation: 'Grundsaetzlich muss das Maschinenfahrzeug dem Segelfahrzeug ausweichen, es sei denn, besondere Umstaende wie Manoevrierunfaehigkeit gelten.' },
+            { id: 's3', topic: 'kvr', q: 'Was ist die "Ausweichpflicht" nach KVR Regel 16?', options: ['Muss anhalten', 'Muss fruehzeitig und deutlich erkennbar ausweichen', 'Muss Schallsignal geben', 'Muss Geschwindigkeit erhoehen'], correct: 1, explanation: 'Das ausweichpflichtige Fahrzeug muss fruehzeitig und deutlich erkennbar Massnahmen ergreifen, um mit genuegend Abstand klar zu passieren.' },
+            { id: 's4', topic: 'kvr', q: 'Was muss der Kurshalter nach KVR Regel 17 tun?', options: ['Sofort wenden', 'Kurs und Geschwindigkeit beibehalten', 'Immer anhalten', 'Signal geben'], correct: 1, explanation: 'Der Kurshalter muss zunaechst Kurs und Geschwindigkeit beibehalten, damit der Ausweichpflichtige die Situation richtig einschaetzen kann.' },
+            { id: 's5', topic: 'kvr', q: 'Zwei Motorboote fahren auf entgegengesetzten Kursen aufeinander zu. Was ist zu tun?', options: ['Beide weichen nach Backbord aus', 'Beide weichen nach Steuerbord aus', 'Das groessere hat Vorfahrt', 'Eines muss anhalten'], correct: 1, explanation: 'Bei entgegengesetzten Kursen muessen beide Fahrzeuge nach Steuerbord (rechts) ausweichen, um Backbord an Backbord zu passieren.' },
+            { id: 's6', topic: 'kvr', q: 'Was bedeutet ein Fahrzeug, das drei senkrechte Baelle zeigt?', options: ['Vor Anker', 'Manoevrierunfaehig', 'Auf Grund gelaufen', 'Fischend'], correct: 2, explanation: 'Drei senkrechte Baelle zeigen ein auf Grund gelaufenes Fahrzeug an.' },
+            { id: 's7', topic: 'kvr', q: 'Was zeigt ein manoevrierbehindertes Fahrzeug bei Tag?', options: ['Drei Baelle senkrecht', 'Ball-Rhombus-Ball senkrecht', 'Zwei Baelle senkrecht', 'Einen Kegel'], correct: 1, explanation: 'Ein manoevrierbehindertes Fahrzeug zeigt bei Tag senkrecht: Ball-Rhombus-Ball.' },
+
+            // Navigation
+            { id: 's8', topic: 'navigation', q: 'Was ist eine Seemeile?', options: ['1000 Meter', '1852 Meter', '1609 Meter', '2000 Meter'], correct: 1, explanation: 'Eine Seemeile (nautische Meile) entspricht 1852 Metern. Sie entspricht einer Bogenminute am Aequator.' },
+            { id: 's9', topic: 'navigation', q: 'Was ist ein Knoten?', options: ['Eine Einheit fuer Windstaerke', 'Eine Seemeile pro Stunde', 'Ein Navigationspunkt', 'Eine Befestigungstechnik'], correct: 1, explanation: 'Ein Knoten (kn) ist die Geschwindigkeitseinheit auf See und entspricht einer Seemeile pro Stunde (1,852 km/h).' },
+            { id: 's10', topic: 'navigation', q: 'Was ist Missweisung?', options: ['Ein Kompassfehler', 'Die Differenz zwischen geografisch Nord und magnetisch Nord', 'Ein Navigationsfehler', 'Ein Kartenfehler'], correct: 1, explanation: 'Die Missweisung (Deklination) ist der Winkel zwischen der geographischen Nordrichtung und der magnetischen Nordrichtung an einem Ort.' },
+            { id: 's11', topic: 'navigation', q: 'Was ist der Kurs ueber Grund (KuG)?', options: ['Der Kompasskurs', 'Der tatsaechliche Weg ueber den Meeresgrund', 'Der Steuerkurs', 'Der geplante Kurs'], correct: 1, explanation: 'Der Kurs ueber Grund ist der tatsaechliche Kurs eines Fahrzeugs bezogen auf den Meeresgrund, unter Beruecksichtigung von Strom und Wind.' },
+            { id: 's12', topic: 'navigation', q: 'Was ist eine Peilung?', options: ['Eine Geschwindigkeitsmessung', 'Die Richtung zu einem Objekt', 'Eine Tiefenmessung', 'Ein Wetterbericht'], correct: 1, explanation: 'Eine Peilung ist die Bestimmung der Richtung (Winkel) zu einem bekannten Objekt, um die eigene Position zu bestimmen.' },
+            { id: 's13', topic: 'navigation', q: 'Was sind Breitenminuten auf der Seekarte?', options: ['Laengeneinheiten am Kartenrand', 'Entsprechen jeweils einer Seemeile am seitlichen Kartenrand', 'Zeitangaben', 'Tiefenangaben'], correct: 1, explanation: 'Eine Breitenminute entspricht einer Seemeile. Entfernungen werden daher am seitlichen (Breiten-)Massstab der Seekarte abgegriffen.' },
+
+            // Lichter See
+            { id: 's14', topic: 'lichter_see', q: 'Welche Lichter fuehrt ein Maschinenfahrzeug ueber 50m Laenge?', options: ['Ein Topplicht und Seitenlichter', 'Zwei Topplichter, Seitenlichter und Hecklicht', 'Nur ein weisses Rundumlicht', 'Drei Topplichter'], correct: 1, explanation: 'Ein Maschinenfahrzeug ueber 50m fuehrt: vorderes (niedrigeres) Topplicht, hinteres (hoeheres) Topplicht, Seitenlichter und Hecklicht.' },
+            { id: 's15', topic: 'lichter_see', q: 'Was zeigt ein Fischerfahrzeug beim Fischen?', options: ['Rotes und weisses Rundumlicht', 'Zwei senkrechte Rundumlichter: oben rot, unten weiss', 'Nur gruenes Licht', 'Gelbes Blinklicht'], correct: 1, explanation: 'Ein fischend es Fahrzeug zeigt zwei senkrechte Rundumlichter: oben rot, unten weiss.' },
+            { id: 's16', topic: 'lichter_see', q: 'Was bedeuten zwei rote Rundumlichter senkrecht?', options: ['Fischend', 'Manoevrierunfaehig', 'Vor Anker', 'Schleppt'], correct: 1, explanation: 'Zwei rote Rundumlichter senkrecht zeigen ein manoevrierunfaehiges Fahrzeug an.' },
+            { id: 's17', topic: 'lichter_see', q: 'Was zeigt ein Segelfahrzeug bei Nacht?', options: ['Topplicht und Hecklicht', 'Seitenlichter und Hecklicht', 'Nur ein weisses Licht', 'Topplicht, Seitenlichter und Hecklicht'], correct: 1, explanation: 'Ein Segelfahrzeug fuehrt Seitenlichter und ein Hecklicht, aber kein Topplicht (es faehrt ja nicht mit Maschine).' },
+
+            // Seenotsignale
+            { id: 's18', topic: 'seenotsignale', q: 'Welches ist KEIN Seenotsignal?', options: ['SOS per Funk', 'Rote Handfackel', 'Langsames Heben und Senken der Arme', 'Ein langer Ton alle 2 Minuten'], correct: 3, explanation: 'Ein langer Ton alle 2 Minuten ist kein Seenotsignal. SOS per Funk, rote Handfackeln und das langsame Heben und Senken der ausgestreckten Arme sind anerkannte Seenotsignale.' },
+            { id: 's19', topic: 'seenotsignale', q: 'Was ist ein MAYDAY-Ruf?', options: ['Ein Wetterbericht', 'Ein Seenotruf bei unmittelbarer Gefahr', 'Ein Anruf an den Hafen', 'Ein Routineanruf'], correct: 1, explanation: 'MAYDAY ist der internationale Seenotruf, der bei unmittelbarer Gefahr fuer Schiff oder Menschenleben gesendet wird. Er hat hoechste Prioritaet.' },
+            { id: 's20', topic: 'seenotsignale', q: 'Auf welchem UKW-Kanal wird der Seenotruf gesendet?', options: ['Kanal 9', 'Kanal 16', 'Kanal 12', 'Kanal 72'], correct: 1, explanation: 'Der internationale Not-, Dringlichkeits- und Anrufkanal ist UKW Kanal 16 (156,800 MHz).' },
+            { id: 's21', topic: 'seenotsignale', q: 'Was ist ein PAN-PAN-Ruf?', options: ['Ein Notruf', 'Ein Dringlichkeitsruf', 'Ein Sicherheitsbericht', 'Ein Wetterbericht'], correct: 1, explanation: 'PAN-PAN ist ein Dringlichkeitsruf, der eine ernste Situation anzeigt, die aber (noch) keine unmittelbare Gefahr darstellt.' },
+
+            // Gezeiten
+            { id: 's22', topic: 'gezeiten', q: 'Was ist der Tidenhub?', options: ['Die Geschwindigkeit der Stroemung', 'Der Hoehenunterschied zwischen Hoch- und Niedrigwasser', 'Die Dauer einer Tide', 'Die Wellenhoehe'], correct: 1, explanation: 'Der Tidenhub ist der Hoehenunterschied zwischen dem Hochwasser und dem darauffolgenden Niedrigwasser.' },
+            { id: 's23', topic: 'gezeiten', q: 'Wie lange dauert ein Tidenzyklus ungefaehr?', options: ['6 Stunden', '12 Stunden 25 Minuten', '24 Stunden', '8 Stunden'], correct: 1, explanation: 'Ein halber Tidenzyklus (von HW zu HW) dauert etwa 12 Stunden und 25 Minuten, ein voller Zyklus etwa 24 Stunden und 50 Minuten.' },
+            { id: 's24', topic: 'gezeiten', q: 'Was ist Springtide?', options: ['Besonders niedriger Tidenhub', 'Besonders hoher Tidenhub bei Voll- und Neumond', 'Tide ohne Stroemung', 'Tide nur bei Sturm'], correct: 1, explanation: 'Springtide (Springflut/Springebbe) tritt bei Voll- und Neumond auf, wenn Sonne und Mond in einer Linie stehen und sich die Gezeitenkraefte addieren.' },
+            { id: 's25', topic: 'gezeiten', q: 'Was ist Nipptide?', options: ['Besonders hoher Tidenhub', 'Besonders niedriger Tidenhub bei Halbmond', 'Tid e bei Sturm', 'Tide ohne Wasser'], correct: 1, explanation: 'Nipptide tritt bei Halbmond auf, wenn Sonne und Mond im rechten Winkel zur Erde stehen. Der Tidenhub ist dann am geringsten.' },
+
+            // Wetter See
+            { id: 's26', topic: 'wetter_see', q: 'Was ist die Beaufort-Skala?', options: ['Eine Temperaturskala', 'Eine Skala zur Einteilung der Windstaerke', 'Eine Skala fuer Wellenhoehen', 'Eine Sichtskala'], correct: 1, explanation: 'Die Beaufort-Skala teilt die Windstaerke in 13 Stufen (0-12) ein, basierend auf Windgeschwindigkeit und sichtbaren Auswirkungen.' },
+            { id: 's27', topic: 'wetter_see', q: 'Ab welcher Windstaerke spricht man von Sturm?', options: ['Beaufort 6', 'Beaufort 8', 'Beaufort 9', 'Beaufort 10'], correct: 2, explanation: 'Ab Beaufort 9 (75-88 km/h) spricht man offiziell von Sturm. Beaufort 8 ist sturmische Winde.' },
+            { id: 's28', topic: 'wetter_see', q: 'Wie dreht der Wind bei Durchzug einer Warmfront auf der Nordhalbkugel?', options: ['Von Sued nach West', 'Von Ost nach Nord', 'Rueckdrehend', 'Gar nicht'], correct: 0, explanation: 'Bei Durchzug einer Warmfront dreht der Wind auf der Nordhalbkugel rechtdrehend von Sued nach Suedwest/West.' },
+
+            // Seemannschaft See
+            { id: 's29', topic: 'seemannschaft_see', q: 'Was ist eine Kreuzpeilung?', options: ['Eine Peilung von zwei oder mehr Objekten zur Standortbestimmung', 'Ein Wendemanoever', 'Eine Ankertechnik', 'Ein Segelmaneuver'], correct: 0, explanation: 'Bei der Kreuzpeilung werden zwei oder mehr Landmarken angepeilt. Die Peillinien schneiden sich auf der Karte und ergeben den Standort.' },
+            { id: 's30', topic: 'seemannschaft_see', q: 'Was ist der Unterschied zwischen wahrer und missweisender Peilung?', options: ['Kein Unterschied', 'Die missweisende Peilung beruecksichtigt die magnetische Deklination', 'Die wahre Peilung ist ungenauer', 'Die missweisende Peilung bezieht sich auf Sueden'], correct: 1, explanation: 'Die wahre Peilung bezieht sich auf geographisch Nord, die missweisende auf magnetisch Nord. Die Differenz ist die Missweisung.' },
+        ]
+    };
+
+    // ==================== TOPICS ====================
+    const topics = {
+        binnen: [
+            { id: 'verkehrsregeln', name: 'Verkehrsregeln', icon: '🚦', desc: 'Fahrregeln auf Binnengewaessern', count: 0 },
+            { id: 'lichter', name: 'Lichter & Zeichen', icon: '💡', desc: 'Nachtbezeichnung und Signale', count: 0 },
+            { id: 'sicherheit', name: 'Sicherheit', icon: '⛑️', desc: 'Sicherheitsausruestung und Notfaelle', count: 0 },
+            { id: 'wetter', name: 'Wetterkunde', icon: '🌤️', desc: 'Wetterbeobachtung und -vorhersage', count: 0 },
+            { id: 'knoten', name: 'Knoten', icon: '🪢', desc: 'Seemannsknoten und ihre Anwendung', count: 0 },
+            { id: 'umwelt', name: 'Umweltschutz', icon: '🌿', desc: 'Umweltverhalten auf dem Wasser', count: 0 },
+            { id: 'seemannschaft', name: 'Seemannschaft', icon: '⚓', desc: 'Grundlagen der Bootskunde', count: 0 },
+        ],
+        see: [
+            { id: 'kvr', name: 'KVR', icon: '📜', desc: 'Kollisionsverhuetungsregeln', count: 0 },
+            { id: 'navigation', name: 'Navigation', icon: '🧭', desc: 'Seekartenarbeit und Standortbestimmung', count: 0 },
+            { id: 'lichter_see', name: 'Lichter & Zeichen', icon: '💡', desc: 'Lichter auf See', count: 0 },
+            { id: 'seenotsignale', name: 'Seenotsignale', icon: '🆘', desc: 'Not- und Dringlichkeitssignale', count: 0 },
+            { id: 'gezeiten', name: 'Gezeiten', icon: '🌊', desc: 'Tiden und Stroemungen', count: 0 },
+            { id: 'wetter_see', name: 'Wetter', icon: '⛈️', desc: 'Seewetter und Wetterberichte', count: 0 },
+            { id: 'seemannschaft_see', name: 'Seemannschaft', icon: '⚓', desc: 'Praktische Seemannschaft auf See', count: 0 },
+        ]
+    };
+
+    // Count questions per topic
+    function countTopicQuestions() {
+        ['binnen', 'see'].forEach(license => {
+            topics[license].forEach(topic => {
+                topic.count = questions[license].filter(q => q.topic === topic.id).length;
+            });
+        });
+    }
+    countTopicQuestions();
+
+    // ==================== KNOWLEDGE BASE (Offline AI) ====================
+    const knowledgeBase = {
+        'lichter': 'Lichterführung auf Binnengewässern und auf See:\n\n**Motorboot (Binnen, unter 20m):** Ein weißes Topplicht und Seitenlichter ODER ein weißes Rundumlicht.\n\n**Motorboot (See, unter 50m):** Ein Topplicht (weiß), Seitenlichter (Bb rot, Stb grün) und ein Hecklicht (weiß).\n\n**Motorboot (See, über 50m):** Zwei Topplichter (vorn niedrig, hinten hoch), Seitenlichter und Hecklicht.\n\n**Segelboot:** Seitenlichter und Hecklicht, KEIN Topplicht.\n\n**Merkhilfe:** Backbord = Links = Rot (wie Portwein). Steuerbord = Rechts = Grün.',
+
+        'vorfahrt': 'Vorfahrtsregeln:\n\n**Binnen:** Die Berufsschifffahrt hat grundsätzlich Vorfahrt vor Kleinfahrzeugen. Unter Kleinfahrzeugen gilt: Segeln vor Motor, aber Sonderregeln beachten.\n\n**See (KVR):**\n1. Manövrierunfähige Fahrzeuge\n2. Manövrierbehinderte Fahrzeuge\n3. Fischereifahrzeuge beim Fischen\n4. Segelfahrzeuge\n5. Maschinenfahrzeuge\n\n**Motorboote untereinander:** Bei Gegenkurs beide nach Steuerbord ausweichen. Bei kreuzenden Kursen weicht das Fahrzeug aus, das das andere an Steuerbord hat.',
+
+        'knoten': 'Wichtige Seemannsknoten:\n\n**Palstek:** Bildet ein festes Auge, das sich nicht zuzieht. Wichtigster Knoten!\n**Kreuzknoten:** Verbindet zwei gleich dicke Leinen.\n**Webeleinstek:** Befestigung an Pfählen und Stangen.\n**Schotstek:** Verbindet zwei unterschiedlich dicke Leinen.\n**Achtknoten:** Stopperknoten am Leinenende.\n**Rundtörn mit zwei halben Schlägen:** Festmachen an Ringen.\n**Klampe belegen:** Kreuzweise um die Klampe, Kopfschlag zum Sichern.',
+
+        'kvr': 'Die Kollisionsverhütungsregeln (KVR/COLREG):\n\nDie KVR gelten auf See und bestehen aus 41 Regeln in 5 Teilen:\n- Teil A: Allgemeines (Regeln 1-3)\n- Teil B: Ausweich- und Fahrregeln (Regeln 4-19)\n- Teil C: Lichter und Signalkörper (Regeln 20-31)\n- Teil D: Schall- und Lichtsignale (Regeln 32-37)\n- Teil E: Befreiungen (Regel 38)\n\n**Wichtige Regeln:**\n- Regel 5: Ausguck\n- Regel 7: Risiko der Kollision\n- Regel 8: Manöver zur Vermeidung\n- Regel 12: Segelfahrzeuge untereinander\n- Regel 13-15: Überholen, Entgegenkommen, Kreuzen',
+
+        'gezeiten': 'Gezeitenkunde:\n\n**Grundlagen:** Gezeiten entstehen durch Anziehungskräfte von Mond und Sonne.\n\n**Begriffe:**\n- Hochwasser (HW): Höchster Wasserstand\n- Niedrigwasser (NW): Niedrigster Wasserstand\n- Tidenhub: Höhendifferenz HW-NW\n- Flut: Steigendes Wasser\n- Ebbe: Fallendes Wasser\n\n**Springtide:** Bei Voll-/Neumond (Sonne+Mond in Linie) → größter Tidenhub\n**Nipptide:** Bei Halbmond (90° Winkel) → kleinster Tidenhub\n\n**Zyklus:** ca. 12 Stunden 25 Minuten von HW zu HW\n**12er-Regel:** Zur Berechnung der Wasserstandsänderung pro Stunde.',
+
+        'seenotsignale': 'Seenotsignale:\n\n**MAYDAY** (Funk): Bei unmittelbarer Lebensgefahr auf Kanal 16\n- "MAYDAY MAYDAY MAYDAY, hier ist [Schiffsname] x3"\n- Position, Art der Gefahr, Hilfe benötigt\n\n**PAN-PAN** (Funk): Dringlichkeitsmeldung (noch keine unmittelbare Gefahr)\n\n**Optische Seenotsignale:**\n- Rote Handfackeln\n- Rote Fallschirmraketen\n- Orangefarbener Rauch\n- Langsames Heben und Senken der ausgestreckten Arme\n- Flagge N über C (Notflagge)\n- SOS (Licht oder Ton: ··· --- ···)\n\n**EPIRB:** Elektronische Seenotbake (406 MHz)',
+
+        'wetter': 'Wetterkunde für die Schifffahrt:\n\n**Beaufort-Skala:**\n- Bft 0: Windstille (0 km/h)\n- Bft 3: Schwache Brise (12-19 km/h)\n- Bft 5: Frische Brise (29-38 km/h)\n- Bft 7: Steifer Wind (50-61 km/h)\n- Bft 9: Sturm (75-88 km/h)\n- Bft 12: Orkan (>117 km/h)\n\n**Wetterzeichen:**\n- Fallender Luftdruck → schlechtes Wetter naht\n- Cumulonimbus-Wolken → Gewitter\n- Rückseitenwetter → Schauer, böig\n\n**Seewetterbericht:** Über DWD, NAVTEX, UKW-Funk verfügbar.',
+
+        'navigation_see': 'Navigation auf See:\n\n**Kursbestimmung:**\n- rwK = rechtweisender Kurs (bezogen auf geogr. Nord)\n- mwK = missweisender Kurs (bezogen auf magn. Nord)\n- MgK = Magnetkompasskurs\n\n**Formel:** rwK = MgK + Abl + Mw\n\n**Standortbestimmung:**\n- Kreuzpeilung (2+ Objekte peilen)\n- Versegelungspeilung\n- GPS\n\n**Seekarte:**\n- Entfernungen am seitlichen Breitenmaßstab abgreifen\n- 1 Breitenminute = 1 Seemeile = 1852m\n- Nie am oberen/unteren Längenmaßstab messen!',
+
+        'sicherheit': 'Sicherheit an Bord:\n\n**Pflichtausrüstung:**\n- Rettungsweste für jede Person\n- Feuerlöscher (ABC oder CO2)\n- Erste-Hilfe-Kasten\n- Lenzeinrichtung\n- Signalmittel\n\n**Mann über Bord:**\n1. "Mann über Bord!" rufen\n2. Rettungsmittel werfen\n3. Person NICHT aus den Augen verlieren\n4. Williamson-Turn oder Quick-Stop-Manöver\n5. Rettung über Lee-Seite\n\n**Tanken:**\n- Alle elektrischen Geräte aus\n- Kein offenes Feuer\n- Motorraum belüften\n- Statische Aufladung vermeiden',
+
+        'seemannschaft': 'Grundlagen Seemannschaft:\n\n**Richtungsbezeichnungen:**\n- Bug = Vorne\n- Heck = Hinten\n- Backbord = Links (rot)\n- Steuerbord = Rechts (grün)\n- Luv = windzu gewandte Seite\n- Lee = windabgewandte Seite\n- Voraus = in Fahrtrichtung\n- Achteraus = entgegen Fahrtrichtung\n- Querab = seitlich\n\n**Bootsmaße:**\n- Länge über Alles (LüA)\n- Breite über Alles (BüA)\n- Tiefgang\n- Freibord (Wasserlinie bis Deck)',
+    };
+
+    function getKnowledgeResponse(userMessage) {
+        const msg = userMessage.toLowerCase();
+        let response = '';
+
+        const keywordMap = {
+            'lichter': ['licht', 'lichter', 'topplicht', 'seitenlicht', 'hecklicht', 'rundumlicht', 'backbordlicht', 'steuerbordlicht', 'nachtbezeichnung', 'beleuchtung'],
+            'vorfahrt': ['vorfahrt', 'ausweich', 'vorrang', 'wer muss', 'regel 12', 'regel 13', 'regel 14', 'regel 15', 'begegnen', 'kreuzen', 'ueberhol'],
+            'knoten': ['knoten', 'palstek', 'kreuzknoten', 'webeleinstek', 'schotstek', 'achtknoten', 'klampe', 'belegen', 'leine', 'festmach'],
+            'kvr': ['kvr', 'colreg', 'kollision', 'regel', 'rules of the road', 'seeschifffahrt'],
+            'gezeiten': ['gezeit', 'tide', 'ebbe', 'flut', 'hochwasser', 'niedrigwasser', 'tidenhub', 'spring', 'nipp'],
+            'seenotsignale': ['seenot', 'mayday', 'pan pan', 'sos', 'notsignal', 'not signal', 'rettung', 'fackel', 'rakete', 'epirb', 'kanal 16'],
+            'wetter': ['wetter', 'wind', 'beaufort', 'sturm', 'gewitter', 'boe', 'luftdruck', 'wolken', 'cumulo'],
+            'navigation_see': ['navigation', 'kurs', 'peilung', 'seemeile', 'missweisung', 'seekarte', 'standort', 'kompass', 'deklination'],
+            'sicherheit': ['sicherheit', 'rettungsweste', 'feuerloescher', 'mann ueber bord', 'tanken', 'not', 'erste hilfe', 'sicherheitsausruestung'],
+            'seemannschaft': ['seemannschaft', 'backbord', 'steuerbord', 'bug', 'heck', 'luv', 'lee', 'tiefgang', 'freibord', 'bootskunde'],
+        };
+
+        let bestMatch = '';
+        let bestScore = 0;
+
+        for (const [topic, keywords] of Object.entries(keywordMap)) {
+            let score = 0;
+            for (const keyword of keywords) {
+                if (msg.includes(keyword)) {
+                    score += keyword.length;
+                }
+            }
+            if (score > bestScore) {
+                bestScore = score;
+                bestMatch = topic;
+            }
+        }
+
+        if (bestMatch && knowledgeBase[bestMatch]) {
+            response = knowledgeBase[bestMatch];
+        } else {
+            response = 'Das ist eine gute Frage! Hier ein paar Tipps:\n\n';
+            response += '**Fuer den SBF Binnen** sind besonders wichtig:\n';
+            response += '- Verkehrsregeln auf Binnengewaessern\n';
+            response += '- Lichter und Schallsignale\n';
+            response += '- Knoten und Seemannschaft\n\n';
+            response += '**Fuer den SBF See** zusaetzlich:\n';
+            response += '- KVR (Kollisionsverhuetungsregeln)\n';
+            response += '- Navigation und Seekartenarbeit\n';
+            response += '- Gezeiten und Seenotsignale\n\n';
+            response += 'Frag mich gerne zu einem dieser Themen! Zum Beispiel:\n';
+            response += '- "Erklaere mir die Lichter eines Motorboots"\n';
+            response += '- "Was sind die Vorfahrtsregeln auf See?"\n';
+            response += '- "Welche Knoten muss ich kennen?"';
+        }
+
+        return response;
+    }
+
+    // ==================== PAGE NAVIGATION ====================
+    function showPage(page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + page).classList.add('active');
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector(`.nav-tab[data-page="${page}"]`).classList.add('active');
+        currentPage = page;
+
+        if (page === 'lernen') renderTopics();
+        if (page === 'quiz') renderQuizSetup();
+        if (page === 'dashboard') renderDashboard();
+        if (page === 'pruefung') renderExamSetup();
+    }
+
+    function setLicense(license) {
+        currentLicense = license;
+        document.querySelectorAll('.license-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.license-btn.${license}`).classList.add('active');
+
+        if (currentPage === 'lernen') renderTopics();
+        if (currentPage === 'quiz') renderQuizSetup();
+        if (currentPage === 'dashboard') renderDashboard();
+        if (currentPage === 'pruefung') renderExamSetup();
+    }
+
+    // ==================== DASHBOARD ====================
+    function renderDashboard() {
+        document.getElementById('stat-answered').textContent = stats.answered || 0;
+        const pct = stats.answered > 0 ? Math.round((stats.correct / stats.answered) * 100) : 0;
+        document.getElementById('stat-correct').textContent = pct + '%';
+
+        const totalTopics = topics[currentLicense].length;
+        const learnedTopics = (stats.topicsLearned || []).filter(t => t.startsWith(currentLicense + ':')).length;
+        document.getElementById('stat-topics').textContent = learnedTopics + '/' + totalTopics;
+
+        const isReady = pct >= 80 && stats.answered >= 20;
+        document.getElementById('stat-ready').textContent = isReady ? 'Bereit!' : 'Noch nicht';
+        document.getElementById('stat-ready').style.color = isReady ? 'var(--secondary)' : 'var(--danger)';
+
+        // Progress overview
+        const progressHtml = topics[currentLicense].map(topic => {
+            const topicQs = questions[currentLicense].filter(q => q.topic === topic.id);
+            const answered = (stats['topic_' + currentLicense + '_' + topic.id] || 0);
+            const pctTopic = topicQs.length > 0 ? Math.min(100, Math.round((answered / topicQs.length) * 100)) : 0;
+            return `<div style="margin-bottom: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                    <span>${topic.icon} ${topic.name}</span>
+                    <span style="color: var(--text-light); font-size: 0.85rem;">${pctTopic}%</span>
+                </div>
+                <div class="progress-bar-container"><div class="progress-bar-fill" style="width: ${pctTopic}%"></div></div>
+            </div>`;
+        }).join('');
+        document.getElementById('progress-overview').innerHTML = progressHtml;
+    }
+
+    // ==================== LERNEN ====================
+    function renderTopics() {
+        const label = currentLicense === 'binnen' ? 'SBF Binnen' : 'SBF See';
+        document.getElementById('learn-license-label').textContent = label;
+
+        const grid = document.getElementById('topic-grid');
+        grid.innerHTML = topics[currentLicense].map(topic => `
+            <div class="topic-card" onclick="openTopic('${topic.id}')">
+                <div class="topic-count">${topic.count} Fragen</div>
+                <div class="topic-icon">${topic.icon}</div>
+                <h3>${topic.name}</h3>
+                <p>${topic.desc}</p>
+            </div>
+        `).join('');
+
+        document.getElementById('topic-grid').classList.remove('hidden');
+        document.getElementById('topic-detail').classList.add('hidden');
+    }
+
+    function openTopic(topicId) {
+        const topic = topics[currentLicense].find(t => t.id === topicId);
+        const topicQuestions = questions[currentLicense].filter(q => q.topic === topicId);
+
+        // Mark topic as learned
+        const key = currentLicense + ':' + topicId;
+        if (!stats.topicsLearned) stats.topicsLearned = [];
+        if (!stats.topicsLearned.includes(key)) {
+            stats.topicsLearned.push(key);
+            saveStats();
+        }
+
+        // Find matching knowledge
+        let knowledgeContent = '';
+        const knowledgeKeys = Object.keys(knowledgeBase);
+        for (const kk of knowledgeKeys) {
+            if (kk === topicId || kk === topicId + '_see' || kk.includes(topicId)) {
+                knowledgeContent = knowledgeBase[kk];
+                break;
+            }
+        }
+
+        let html = `<div class="card"><h2>${topic.icon} ${topic.name}</h2>`;
+        if (knowledgeContent) {
+            html += `<div style="white-space: pre-line; line-height: 1.8;">${formatText(knowledgeContent)}</div>`;
+        }
+        html += `</div>`;
+
+        html += `<div class="card"><h2>Uebungsfragen</h2>`;
+        html += topicQuestions.map((q, i) => `
+            <div class="learn-card" id="learn-q-${i}">
+                <div class="learn-card-header" onclick="toggleLearnCard(${i})">
+                    <h3>Frage ${i + 1}: ${q.q}</h3>
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="learn-card-body">
+                    <div style="margin-bottom: 1rem;">
+                        ${q.options.map((opt, j) => `
+                            <div style="padding: 0.5rem; margin: 0.25rem 0; border-radius: 6px; ${j === q.correct ? 'background: #e8f5e9; border: 1px solid #a5d6a7; font-weight: 600;' : 'background: var(--bg);'}">
+                                ${String.fromCharCode(65 + j)}) ${opt} ${j === q.correct ? ' ✅' : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="padding: 1rem; background: #e3f2fd; border-radius: 8px; border: 1px solid #90caf9;">
+                        <strong>Erklaerung:</strong> ${q.explanation}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        html += `</div>`;
+
+        html += `<div style="text-align: center; margin-top: 1rem;">
+            <button class="btn btn-primary btn-lg" onclick="showPage('quiz'); startTopicQuiz('${topicId}')">
+                Quiz zu diesem Thema starten
+            </button>
+        </div>`;
+
+        document.getElementById('topic-detail-content').innerHTML = html;
+        document.getElementById('topic-grid').classList.add('hidden');
+        document.getElementById('topic-detail').classList.remove('hidden');
+    }
+
+    function showTopicGrid() {
+        document.getElementById('topic-grid').classList.remove('hidden');
+        document.getElementById('topic-detail').classList.add('hidden');
+    }
+
+    function toggleLearnCard(i) {
+        document.getElementById('learn-q-' + i).classList.toggle('open');
+    }
+
+    function formatText(text) {
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+    }
+
+    // ==================== QUIZ ====================
+    function renderQuizSetup() {
+        const select = document.getElementById('quiz-topic');
+        select.innerHTML = '<option value="all">Alle Themen</option>';
+        topics[currentLicense].forEach(topic => {
+            select.innerHTML += `<option value="${topic.id}">${topic.icon} ${topic.name} (${topic.count} Fragen)</option>`;
+        });
+
+        document.getElementById('quiz-setup').classList.remove('hidden');
+        document.getElementById('quiz-active').classList.add('hidden');
+        document.getElementById('quiz-result').classList.add('hidden');
+    }
+
+    function setQuizCount(count, btn) {
+        quizCount = count;
+        document.querySelectorAll('.quiz-count-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function setQuizMode(mode, btn) {
+        quizMode = mode;
+        document.querySelectorAll('.quiz-mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function startQuiz() {
+        const topicFilter = document.getElementById('quiz-topic').value;
+        let pool = [...questions[currentLicense]];
+        if (topicFilter !== 'all') pool = pool.filter(q => q.topic === topicFilter);
+
+        shuffleArray(pool);
+        currentQuiz = quizCount > 0 ? pool.slice(0, quizCount) : pool;
+        currentQuizIndex = 0;
+        quizCorrect = 0;
+        quizAnswered = 0;
+
+        document.getElementById('quiz-setup').classList.add('hidden');
+        document.getElementById('quiz-active').classList.remove('hidden');
+        document.getElementById('quiz-result').classList.add('hidden');
+
+        renderQuizQuestion();
+    }
+
+    function startQuickQuiz() {
+        quizCount = 10;
+        quizMode = 'learn';
+        document.getElementById('quiz-topic').value = 'all';
+        startQuiz();
+    }
+
+    function startTopicQuiz(topicId) {
+        document.getElementById('quiz-topic').value = topicId;
+        quizCount = 0;
+        quizMode = 'learn';
+        startQuiz();
+    }
+
+    function renderQuizQuestion() {
+        if (currentQuizIndex >= currentQuiz.length) {
+            showQuizResult();
+            return;
+        }
+
+        const q = currentQuiz[currentQuizIndex];
+        const total = currentQuiz.length;
+
+        document.getElementById('quiz-counter').textContent = `Frage ${currentQuizIndex + 1}/${total}`;
+        document.getElementById('quiz-progress-fill').style.width = ((currentQuizIndex / total) * 100) + '%';
+        document.getElementById('quiz-score').textContent = `${quizCorrect} richtig`;
+
+        const html = `
+            <div class="question-card">
+                <span class="question-number">${currentLicense === 'binnen' ? 'SBF Binnen' : 'SBF See'}</span>
+                <div class="question-text">${q.q}</div>
+                <div class="answer-options" id="answer-options">
+                    ${q.options.map((opt, i) => `
+                        <div class="answer-option" onclick="selectAnswer(${i})" id="option-${i}">
+                            <span class="answer-letter">${String.fromCharCode(65 + i)}</span>
+                            <span class="answer-text">${opt}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="explanation-box" id="explanation-box">
+                    <h4 id="explanation-title"></h4>
+                    <p>${q.explanation}</p>
+                </div>
+                <div class="quiz-actions" id="quiz-actions" style="display: none;">
+                    <div></div>
+                    <button class="btn btn-primary" onclick="nextQuestion()">Naechste Frage →</button>
+                </div>
+            </div>
+        `;
+        document.getElementById('quiz-question-area').innerHTML = html;
+    }
+
+    function selectAnswer(index) {
+        const q = currentQuiz[currentQuizIndex];
+        const options = document.querySelectorAll('.answer-option');
+
+        if (options[0].classList.contains('correct') || options[0].classList.contains('wrong') ||
+            document.querySelector('.answer-option.selected.correct') || document.querySelector('.answer-option.selected.wrong')) return;
+
+        const isCorrect = index === q.correct;
+
+        options[index].classList.add(isCorrect ? 'correct' : 'wrong');
+        if (!isCorrect) options[q.correct].classList.add('correct');
+
+        quizAnswered++;
+        if (isCorrect) quizCorrect++;
+
+        stats.answered = (stats.answered || 0) + 1;
+        if (isCorrect) stats.correct = (stats.correct || 0) + 1;
+        stats['topic_' + currentLicense + '_' + q.topic] = (stats['topic_' + currentLicense + '_' + q.topic] || 0) + (isCorrect ? 1 : 0);
+        saveStats();
+
+        if (quizMode === 'learn') {
+            const explBox = document.getElementById('explanation-box');
+            explBox.style.display = 'block';
+            explBox.className = 'explanation-box' + (isCorrect ? '' : ' wrong-explanation');
+            document.getElementById('explanation-title').textContent = isCorrect ? '✅ Richtig!' : '❌ Leider falsch';
+        }
+
+        document.getElementById('quiz-actions').style.display = 'flex';
+        document.getElementById('quiz-score').textContent = `${quizCorrect} richtig`;
+    }
+
+    function nextQuestion() {
+        currentQuizIndex++;
+        renderQuizQuestion();
+    }
+
+    function showQuizResult() {
+        document.getElementById('quiz-active').classList.add('hidden');
+        document.getElementById('quiz-result').classList.remove('hidden');
+
+        const pct = Math.round((quizCorrect / currentQuiz.length) * 100);
+        const passed = pct >= 80;
+
+        document.getElementById('quiz-result-content').innerHTML = `
+            <div class="result-icon">${passed ? '🎉' : '📚'}</div>
+            <div class="result-score">${pct}%</div>
+            <div class="result-text">${passed ? 'Herzlichen Glueckwunsch! Du hast bestanden!' : 'Noch etwas ueben - du schaffst das!'}</div>
+            <div class="result-details">
+                <div class="result-detail">
+                    <div class="value" style="color: var(--secondary);">${quizCorrect}</div>
+                    <div class="label">Richtig</div>
+                </div>
+                <div class="result-detail">
+                    <div class="value" style="color: var(--danger);">${currentQuiz.length - quizCorrect}</div>
+                    <div class="label">Falsch</div>
+                </div>
+                <div class="result-detail">
+                    <div class="value">${currentQuiz.length}</div>
+                    <div class="label">Gesamt</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button class="btn btn-primary btn-lg" onclick="renderQuizSetup()">Neues Quiz</button>
+                <button class="btn btn-secondary btn-lg" onclick="showPage('lernen')">Weiter lernen</button>
+                <button class="btn btn-success btn-lg" onclick="showPage('ki-chat')">KI fragen</button>
+            </div>
+        `;
+    }
+
+    function endQuiz() {
+        if (quizAnswered > 0) showQuizResult();
+        else renderQuizSetup();
+    }
+
+    // ==================== EXAM SIMULATION ====================
+    function renderExamSetup() {
+        const isBinnen = currentLicense === 'binnen';
+        document.getElementById('exam-question-count').textContent = isBinnen ? '30' : '30';
+        document.getElementById('exam-time-limit').textContent = isBinnen ? '60 Min' : '60 Min';
+        document.getElementById('exam-pass-rate').textContent = '80%';
+        document.getElementById('exam-license-type').textContent = isBinnen ? 'Binnen' : 'See';
+
+        document.getElementById('exam-setup').classList.remove('hidden');
+        document.getElementById('exam-active').classList.add('hidden');
+        document.getElementById('exam-result').classList.add('hidden');
+    }
+
+    function startExam() {
+        let pool = [...questions[currentLicense]];
+        shuffleArray(pool);
+        currentQuiz = pool.slice(0, Math.min(30, pool.length));
+        currentQuizIndex = 0;
+        quizCorrect = 0;
+        examAnswers = {};
+
+        document.getElementById('exam-setup').classList.add('hidden');
+        document.getElementById('exam-active').classList.remove('hidden');
+        document.getElementById('exam-result').classList.add('hidden');
+
+        // Start timer (60 min)
+        examTimeLeft = 60 * 60;
+        updateExamTimer();
+        if (examTimer) clearInterval(examTimer);
+        examTimer = setInterval(() => {
+            examTimeLeft--;
+            updateExamTimer();
+            if (examTimeLeft <= 0) {
+                clearInterval(examTimer);
+                finishExam();
+            }
+        }, 1000);
+
+        renderExamQuestion();
+    }
+
+    function updateExamTimer() {
+        const min = Math.floor(examTimeLeft / 60);
+        const sec = examTimeLeft % 60;
+        const timerEl = document.getElementById('exam-timer');
+        timerEl.textContent = `⏱ ${min}:${sec.toString().padStart(2, '0')}`;
+        if (examTimeLeft < 300) timerEl.classList.add('warning');
+        else timerEl.classList.remove('warning');
+    }
+
+    function renderExamQuestion() {
+        const q = currentQuiz[currentQuizIndex];
+        const total = currentQuiz.length;
+
+        document.getElementById('exam-counter').textContent = `Frage ${currentQuizIndex + 1}/${total}`;
+        document.getElementById('exam-progress-fill').style.width = (((currentQuizIndex + 1) / total) * 100) + '%';
+
+        const selectedAnswer = examAnswers[currentQuizIndex];
+
+        const html = `
+            <div class="question-card">
+                <span class="question-number">Pruefung - ${currentLicense === 'binnen' ? 'SBF Binnen' : 'SBF See'}</span>
+                <div class="question-text">${q.q}</div>
+                <div class="answer-options">
+                    ${q.options.map((opt, i) => `
+                        <div class="answer-option ${selectedAnswer === i ? 'selected' : ''}" onclick="selectExamAnswer(${i})" id="exam-option-${i}">
+                            <span class="answer-letter">${String.fromCharCode(65 + i)}</span>
+                            <span class="answer-text">${opt}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        document.getElementById('exam-question-area').innerHTML = html;
+
+        document.getElementById('exam-prev-btn').disabled = currentQuizIndex === 0;
+        document.getElementById('exam-next-btn').textContent = currentQuizIndex === total - 1 ? 'Pruefung abgeben' : 'Weiter →';
+
+        const answered = Object.keys(examAnswers).length;
+        document.getElementById('exam-nav-info').textContent = `${answered}/${total} beantwortet`;
+    }
+
+    function selectExamAnswer(index) {
+        examAnswers[currentQuizIndex] = index;
+        document.querySelectorAll('#exam-question-area .answer-option').forEach((el, i) => {
+            el.classList.toggle('selected', i === index);
+        });
+        const answered = Object.keys(examAnswers).length;
+        document.getElementById('exam-nav-info').textContent = `${answered}/${currentQuiz.length} beantwortet`;
+    }
+
+    function examNext() {
+        if (currentQuizIndex >= currentQuiz.length - 1) {
+            if (confirm('Pruefung abgeben? Du kannst danach keine Antworten mehr aendern.')) {
+                finishExam();
+            }
+            return;
+        }
+        currentQuizIndex++;
+        renderExamQuestion();
+    }
+
+    function examPrev() {
+        if (currentQuizIndex > 0) {
+            currentQuizIndex--;
+            renderExamQuestion();
+        }
+    }
+
+    function finishExam() {
+        if (examTimer) clearInterval(examTimer);
+
+        let correct = 0;
+        currentQuiz.forEach((q, i) => {
+            if (examAnswers[i] === q.correct) correct++;
+        });
+
+        const total = currentQuiz.length;
+        const pct = Math.round((correct / total) * 100);
+        const passed = pct >= 80;
+
+        stats.answered = (stats.answered || 0) + total;
+        stats.correct = (stats.correct || 0) + correct;
+        saveStats();
+
+        document.getElementById('exam-active').classList.add('hidden');
+        document.getElementById('exam-result').classList.remove('hidden');
+
+        let reviewHtml = currentQuiz.map((q, i) => {
+            const userAnswer = examAnswers[i];
+            const isCorrect = userAnswer === q.correct;
+            return `<div style="padding: 0.75rem; margin: 0.25rem 0; border-radius: 8px; border: 1px solid ${isCorrect ? '#a5d6a7' : '#ef9a9a'}; background: ${isCorrect ? '#e8f5e9' : '#fce4ec'};">
+                <div style="font-weight: 600; margin-bottom: 0.25rem;">${isCorrect ? '✅' : '❌'} Frage ${i+1}: ${q.q}</div>
+                <div style="font-size: 0.85rem;">Deine Antwort: ${userAnswer !== undefined ? q.options[userAnswer] : '(keine)'} | Richtig: ${q.options[q.correct]}</div>
+            </div>`;
+        }).join('');
+
+        document.getElementById('exam-result-content').innerHTML = `
+            <div class="result-icon">${passed ? '🏆' : '📖'}</div>
+            <div class="result-score">${pct}%</div>
+            <div class="result-text">${passed ? 'Bestanden! Du bist bereit fuer die Pruefung!' : 'Leider nicht bestanden. Weiter lernen!'}</div>
+            <div class="result-details">
+                <div class="result-detail">
+                    <div class="value" style="color: var(--secondary);">${correct}</div>
+                    <div class="label">Richtig</div>
+                </div>
+                <div class="result-detail">
+                    <div class="value" style="color: var(--danger);">${total - correct}</div>
+                    <div class="label">Falsch</div>
+                </div>
+                <div class="result-detail">
+                    <div class="value">${total}</div>
+                    <div class="label">Gesamt</div>
+                </div>
+            </div>
+            <details style="text-align: left; margin: 1rem 0;">
+                <summary style="cursor: pointer; font-weight: 600; padding: 0.5rem;">Detaillierte Auswertung anzeigen</summary>
+                <div style="margin-top: 0.5rem;">${reviewHtml}</div>
+            </details>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button class="btn btn-primary btn-lg" onclick="startExam()">Neue Pruefung</button>
+                <button class="btn btn-secondary btn-lg" onclick="showPage('lernen')">Weiter lernen</button>
+            </div>
+        `;
+    }
+
+    // ==================== AI CHAT ====================
+    function saveApiKey() {
+        const key = document.getElementById('api-key-input').value.trim();
+        if (key) {
+            apiKey = key;
+            localStorage.setItem('sbf_api_key', key);
+            document.getElementById('api-key-setup').classList.add('hidden');
+            document.getElementById('chat-mode-label').textContent = 'KI-Modus (Claude)';
+        }
+    }
+
+    function dismissApiKey() {
+        document.getElementById('api-key-setup').classList.add('hidden');
+        document.getElementById('chat-mode-label').textContent = 'Wissens-Modus (Offline)';
+    }
+
+    // Check if API key exists
+    if (apiKey) {
+        document.getElementById('api-key-setup').classList.add('hidden');
+        document.getElementById('chat-mode-label').textContent = 'KI-Modus (Claude)';
+    }
+
+    function askSuggestion(el) {
+        document.getElementById('chat-input').value = el.textContent;
+        sendMessage();
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        input.value = '';
+        addChatMessage('user', msg);
+
+        // Show typing indicator
+        const typingId = 'typing-' + Date.now();
+        addTypingIndicator(typingId);
+
+        if (apiKey) {
+            // Use Claude API
+            try {
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey,
+                        'anthropic-version': '2023-06-01',
+                        'anthropic-dangerous-direct-browser-access': 'true'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 1024,
+                        system: `Du bist ein Experte fuer den deutschen Sportbootfuehrerschein (SBF) Binnen und See. Beantworte Fragen praezise und hilfreich auf Deutsch. Gib konkrete, pruefungsrelevante Antworten. Verwende Aufzaehlungen und Struktur fuer bessere Lesbarkeit. Aktueller Modus: ${currentLicense === 'binnen' ? 'SBF Binnen' : 'SBF See'}`,
+                        messages: [{ role: 'user', content: msg }]
+                    })
+                });
+
+                removeTypingIndicator(typingId);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const aiMsg = data.content[0].text;
+                    addChatMessage('ai', aiMsg);
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    addChatMessage('ai', 'Fehler bei der KI-Anfrage. Ich nutze stattdessen das Offline-Wissen.\n\n' + getKnowledgeResponse(msg));
+                }
+            } catch (error) {
+                removeTypingIndicator(typingId);
+                addChatMessage('ai', 'Verbindungsfehler. Ich nutze das Offline-Wissen:\n\n' + getKnowledgeResponse(msg));
+            }
+        } else {
+            // Offline mode - simulate typing delay
+            setTimeout(() => {
+                removeTypingIndicator(typingId);
+                addChatMessage('ai', getKnowledgeResponse(msg));
+            }, 500 + Math.random() * 1000);
+        }
+    }
+
+    function addChatMessage(type, text) {
+        const chatMessages = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.className = 'chat-message ' + type;
+
+        const avatar = type === 'ai' ? '🧭' : '👤';
+        const formattedText = formatText(text);
+
+        div.innerHTML = `
+            <div class="msg-avatar">${avatar}</div>
+            <div class="msg-bubble">${formattedText}</div>
+        `;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addTypingIndicator(id) {
+        const chatMessages = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.className = 'chat-message ai';
+        div.id = id;
+        div.innerHTML = `
+            <div class="msg-avatar">🧭</div>
+            <div class="msg-bubble">
+                <div class="typing-indicator"><span></span><span></span><span></span></div>
+            </div>
+        `;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function removeTypingIndicator(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    }
+
+    // ==================== UTILITIES ====================
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function saveStats() {
+        localStorage.setItem('sbf_stats', JSON.stringify(stats));
+    }
+
+    // ==================== INIT ====================
+    renderDashboard();
+    </script>
+</body>
+</html>
