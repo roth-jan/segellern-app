@@ -1260,7 +1260,12 @@
                         </select>
                     </div>
 
-                    <div id="drive-voice-input-toggle" style="margin-top: 1.25rem; text-align: left;">
+                    <div style="margin-top: 1rem;">
+                        <label style="display: block; text-align: left; margin-bottom: 0.5rem; color: #aaa; font-size: 0.9rem;">Geschwindigkeit: <span id="drive-speed-label">1.2x</span></label>
+                        <input type="range" id="drive-speed-slider" min="0.8" max="2.0" step="0.1" value="1.2" oninput="onDriveSpeedChange()" style="width: 100%;">
+                    </div>
+
+                    <div id="drive-voice-input-toggle" style="margin-top: 1rem; text-align: left;">
                         <label style="display: flex; align-items: center; gap: 0.5rem; color: #ccc; font-size: 0.95rem; cursor: pointer;">
                             <input type="checkbox" id="drive-voice-input-cb" checked onchange="onVoiceInputToggle()" style="width: 1.2rem; height: 1.2rem;">
                             Per Sprache antworten (A, B, C, D sagen)
@@ -1361,6 +1366,66 @@
             { id: 'b28', topic: 'seemannschaft', q: 'Was ist der Tiefgang eines Bootes?', options: ['Die Laenge des Bootes', 'Der Abstand von der Wasserlinie bis zum tiefsten Punkt', 'Die Hoehe des Mastes', 'Die Breite des Bootes'], correct: 1, explanation: 'Der Tiefgang ist der senkrechte Abstand von der Wasserlinie bis zum tiefsten Punkt des Bootes (Kiel).' },
             { id: 'b29', topic: 'seemannschaft', q: 'Was ist Backbord?', options: ['Die rechte Seite des Schiffes', 'Die linke Seite des Schiffes in Fahrtrichtung', 'Der hintere Teil des Schiffes', 'Der Bug'], correct: 1, explanation: 'Backbord ist die linke Seite des Schiffes in Fahrtrichtung gesehen. Das Backbordlicht ist rot.' },
             { id: 'b30', topic: 'seemannschaft', q: 'Was bedeutet "achteraus"?', options: ['Nach vorne', 'Nach hinten', 'Nach links', 'Nach oben'], correct: 1, explanation: 'Achteraus bedeutet hinter dem Schiff, in die entgegengesetzte Richtung der Fahrtrichtung.' },
+
+            // ===== Zusaetzliche Fragen Binnen =====
+            // Verkehrsregeln zusaetzlich
+            { id: 'b31', topic: 'verkehrsregeln', q: 'Was bedeuten zwei kurze Toene?', options: ['Ich aendere meinen Kurs nach Steuerbord', 'Ich aendere meinen Kurs nach Backbord', 'Ich halte an', 'Notsignal'], correct: 1, explanation: 'Zwei kurze Toene bedeuten: Ich richte meinen Kurs nach Backbord.' },
+            { id: 'b32', topic: 'verkehrsregeln', q: 'Was bedeuten vier kurze Toene?', options: ['Ich bin manoevierunfaehig', 'Ich kann nicht ausweichen', 'Ich wende', 'Ich bin einverstanden mit dem Ueberholen'], correct: 2, explanation: 'Vier kurze Toene bedeuten: Ich wende ueber Steuerbord. Fuenf kurze Toene: Ich wende ueber Backbord.' },
+            { id: 'b33', topic: 'verkehrsregeln', q: 'Was bedeuten fuenf kurze Toene?', options: ['Notsignal', 'Ich wende ueber Backbord', 'Ich lege an', 'Nebelsignal'], correct: 1, explanation: 'Fuenf kurze Toene bedeuten: Ich wende ueber Backbord.' },
+            { id: 'b34', topic: 'verkehrsregeln', q: 'Was zeigt eine rote Flagge an einem Fahrzeug an?', options: ['Vorfahrt', 'Gefahrgut', 'Taucher im Wasser', 'Ankern verboten'], correct: 1, explanation: 'Eine rote Flagge (Flagge B des Internationalen Signalbuches) zeigt an, dass das Fahrzeug Gefahrgut transportiert.' },
+            { id: 'b35', topic: 'verkehrsregeln', q: 'Welches Schallsignal gibt ein Fahrzeug bei Nebel?', options: ['Einen langen Ton jede Minute', 'Einen langen Ton mindestens jede Minute', 'Drei kurze Toene', 'Keines'], correct: 1, explanation: 'Bei unsichtigem Wetter gibt ein Fahrzeug in Fahrt mindestens jede Minute einen langen Ton ab.' },
+            { id: 'b36', topic: 'verkehrsregeln', q: 'Was bedeutet das Tafelzeichen A.1 (rotes Quadrat mit weissem Querstreifen)?', options: ['Durchfahrt frei', 'Durchfahrt verboten', 'Achtung Bruecke', 'Geschwindigkeitsbegrenzung'], correct: 1, explanation: 'Das Zeichen A.1 bedeutet: Durchfahrt verboten (Sperrung der Schifffahrt).' },
+            { id: 'b37', topic: 'verkehrsregeln', q: 'Was bedeutet das Tafelzeichen E.1 (weisses Quadrat mit rotem Rand)?', options: ['Durchfahrt verboten', 'Einfahrt oder Durchfahrt frei', 'Wendestelle', 'Liegestelle'], correct: 1, explanation: 'Das Zeichen E.1 bedeutet: Einfahrt oder Durchfahrt frei.' },
+            { id: 'b38', topic: 'verkehrsregeln', q: 'Duerfen Kleinfahrzeuge in einen Schleusenvorhafen einfahren, wenn die Ampel rot zeigt?', options: ['Ja, Kleinfahrzeuge immer', 'Nein, niemals', 'Nur Segelboote', 'Nur bei Tageslicht'], correct: 1, explanation: 'Bei rotem Licht an der Schleuse ist die Einfahrt in den Schleusenvorhafen verboten.' },
+            { id: 'b39', topic: 'verkehrsregeln', q: 'Was ist ein Kleinfahrzeug nach Binnenschifffahrtsrecht?', options: ['Jedes Boot unter 5 Meter', 'Fahrzeuge unter 20 Meter, ausgenommen bestimmte', 'Nur Segelboote', 'Nur Ruderboote'], correct: 1, explanation: 'Ein Kleinfahrzeug ist ein Fahrzeug unter 20 Meter Laenge, das nicht fuer die Befoerderung von mehr als 12 Fahrgaesten zugelassen ist.' },
+            { id: 'b40', topic: 'verkehrsregeln', q: 'Wo darf auf Binnenwasserstrassen grundsaetzlich geankert werden?', options: ['Ueberall', 'Nur an gekennzeichneten Stellen oder ausserhalb des Fahrwassers', 'Nur in Haefen', 'Gar nicht'], correct: 1, explanation: 'Ankern ist grundsaetzlich ausserhalb des Fahrwassers erlaubt, sofern keine Verbotsschilder stehen.' },
+            { id: 'b41', topic: 'verkehrsregeln', q: 'Wie schnell darf man in den meisten Haefen und Schleusen fahren?', options: ['3 km/h', '5 km/h', '10 km/h', 'Schrittgeschwindigkeit'], correct: 1, explanation: 'In den meisten Haefen und Schleusenvorhaefen gilt eine Geschwindigkeit von 5 km/h oder Schrittgeschwindigkeit.' },
+            { id: 'b42', topic: 'verkehrsregeln', q: 'Was bedeutet ein blauer Wimpel am Bug eines Fahrzeuges?', options: ['Zoll an Bord', 'Lotse an Bord', 'Das Fahrzeug ist ein Behördenfahrzeug', 'Das Fahrzeug fuehrt Gefahrgut'], correct: 2, explanation: 'Ein blauer Wimpel am Bug zeigt ein Behoerdenfahrzeug an.' },
+            { id: 'b43', topic: 'verkehrsregeln', q: 'Was ist beim Durchfahren einer Bruecke zu beachten?', options: ['Immer die rechte Oeffnung nutzen', 'Die markierte Durchfahrtoeffnung benutzen', 'Immer die breiteste Oeffnung', 'Egal welche'], correct: 1, explanation: 'Es ist die mit Zeichen gekennzeichnete Durchfahrtoeffnung zu benutzen. Die empfohlene Durchfahrt ist oft mit einem gelben Rhombus gekennzeichnet.' },
+
+            // Lichter zusaetzlich
+            { id: 'b44', topic: 'lichter', q: 'Was zeigt ein Fahrzeug vor Anker bei Nacht auf Binnengewaessern?', options: ['Rotes Rundumlicht', 'Weisses Rundumlicht', 'Kein Licht', 'Gruenes Licht'], correct: 1, explanation: 'Ein Fahrzeug vor Anker zeigt bei Nacht ein weisses Rundumlicht.' },
+            { id: 'b45', topic: 'lichter', q: 'In welchem Winkelbereich strahlt das Topplicht?', options: ['360 Grad', '225 Grad nach vorn', '135 Grad nach hinten', '112,5 Grad'], correct: 1, explanation: 'Das Topplicht (weiss) strahlt ueber einen Bogen von 225 Grad nach vorn.' },
+            { id: 'b46', topic: 'lichter', q: 'Ueber welchen Winkel strahlen die Seitenlichter jeweils?', options: ['180 Grad', '112,5 Grad', '135 Grad', '90 Grad'], correct: 1, explanation: 'Jedes Seitenlicht strahlt ueber 112,5 Grad — von voraus bis 22,5 Grad hinter die Seite.' },
+            { id: 'b47', topic: 'lichter', q: 'Was zeigt ein Schubverband bei Nacht?', options: ['Drei weisse Topplichter in Dreieck', 'Ein gelbes Hecklicht', 'Drei Topplichter uebereinander', 'Rotes Blinklicht'], correct: 0, explanation: 'Ein Schubverband fuehrt drei weisse Topplichter in Dreiecksform am Vorspan, dazu Seitenlichter und ein gelbes Hecklicht am Schieber.' },
+            { id: 'b48', topic: 'lichter', q: 'Welches Licht fuehrt ein Segelboot unter 7 Meter das keinen Motor nutzt?', options: ['Topplicht und Seitenlichter', 'Nur eine weisse Lampe griffbereit', 'Gruenes Rundumlicht', 'Gar keines'], correct: 1, explanation: 'Ein Segelboot unter 7 Meter kann statt der vorgeschriebenen Lichter eine weisse Lampe griffbereit halten und bei Annaeherung zeigen.' },
+
+            // Sicherheit zusaetzlich
+            { id: 'b49', topic: 'sicherheit', q: 'Was ist die Sog- und Wellenwirkung grosser Schiffe?', options: ['Ungefaehrlich fuer Kleinfahrzeuge', 'Kann Kleinfahrzeuge kentern oder gegen Ufer druecken', 'Nur bei Sturm gefaehrlich', 'Nur auf dem Meer'], correct: 1, explanation: 'Der Sog und die Wellen grosser Schiffe koennen Kleinfahrzeuge kentern, von ihrer Position versetzen oder gegen das Ufer druecken.' },
+            { id: 'b50', topic: 'sicherheit', q: 'Wie sichern Sie ein Boot beim Schleusen?', options: ['Motor laufen lassen', 'Fender ausbringen und Leinen um Poller legen, nicht festmachen', 'Anker werfen', 'Nichts tun'], correct: 1, explanation: 'Beim Schleusen werden Fender ausgebracht und Leinen um Poller oder Halter gelegt, aber NICHT fest belegt — das Boot muss sich mit dem Wasserstand bewegen koennen.' },
+            { id: 'b51', topic: 'sicherheit', q: 'Was bedeutet die CE-Kategorie C bei Sportbooten?', options: ['Hochsee', 'Kueste', 'Kuesten- und geschuetzte Gewaesser', 'Binnengewaesser'], correct: 2, explanation: 'CE-Kategorie C steht fuer "Inshore" — kuesten nahe und geschuetzte Gewaesser mit Windstaerke bis 6 und Wellenhoehe bis 2 Meter.' },
+            { id: 'b52', topic: 'sicherheit', q: 'Warum soll man bei Gewitter nicht auf dem Wasser bleiben?', options: ['Wegen der Wellen', 'Wegen Blitzschlaggefahr', 'Weil es regnet', 'Wegen Nebel'], correct: 1, explanation: 'Bei Gewitter besteht hohe Blitzschlaggefahr, da das Boot oft der hoechste Punkt auf dem Wasser ist.' },
+            { id: 'b53', topic: 'sicherheit', q: 'Was tun bei Wassereinbruch?', options: ['Sofort ins Wasser springen', 'Leck abdichten, Wasser lenzen, Notruf absetzen', 'Motor abstellen', 'Nichts'], correct: 1, explanation: 'Bei Wassereinbruch: Leck suchen und abdichten, Wasser lenzen (pumpen), bei Gefahr Notruf absetzen und Rettungswesten anlegen.' },
+            { id: 'b54', topic: 'sicherheit', q: 'Welche Auftriebsklasse hat eine Rettungsweste mit mindestens 100N?', options: ['Schwimmhilfe', 'Rettungsweste', 'Feststoffweste', 'Ohnmachtssichere Rettungsweste'], correct: 1, explanation: '100N-Westen gelten als Rettungswesten fuer geschuetzte Gewaesser. 150N und 275N sind fuer offene See (ohnmachtssicher).' },
+
+            // Wetter zusaetzlich
+            { id: 'b55', topic: 'wetter', q: 'Was zeigt ein schnell fallender Luftdruck an?', options: ['Schlechtwetter naht', 'Gutes Wetter kommt', 'Nebel', 'Windstille'], correct: 0, explanation: 'Schnell fallender Luftdruck deutet auf eine herannahende Schlechtwetterfront hin.' },
+            { id: 'b56', topic: 'wetter', q: 'Aus welcher Richtung kommt typischerweise Schlechtwetter in Mitteleuropa?', options: ['Osten', 'Sueden', 'Westen bis Suedwesten', 'Norden'], correct: 2, explanation: 'In Mitteleuropa kommen Tiefdruckgebiete und Schlechtwetterfronten typischerweise aus westlicher bis suedwestlicher Richtung.' },
+            { id: 'b57', topic: 'wetter', q: 'Was sind Cirruswolken und was kuendigen sie an?', options: ['Niedrige Regenwolken', 'Hohe, duenne Wolken — oft Vorbote einer Warmfront', 'Gewitterwolken', 'Bodennebel'], correct: 1, explanation: 'Cirruswolken sind hohe, duenne, faserige Wolken. Sie kuendigen oft eine nahende Warmfront an (Wetterverschlechterung in 12-24 Stunden).' },
+            { id: 'b58', topic: 'wetter', q: 'Was ist Nebel?', options: ['Sichtweite unter 1000 Meter durch Wassertroepfchen', 'Starker Regen', 'Schneefall', 'Wind ueber Beaufort 8'], correct: 0, explanation: 'Nebel liegt vor, wenn die Sichtweite durch Wassertroepfchen in der Luft unter 1000 Meter sinkt.' },
+            { id: 'b59', topic: 'wetter', q: 'Was ist eine Kaltfront?', options: ['Warme Luft verdraengt kalte', 'Kalte Luft verdraengt warme', 'Gleichmaessiger Regen', 'Windstille'], correct: 1, explanation: 'Bei einer Kaltfront schiebt sich kalte Luft unter warme Luft. Das fuehrt oft zu Boeen, Schauern und schnellem Wetterwechsel.' },
+
+            // Knoten zusaetzlich
+            { id: 'b60', topic: 'knoten', q: 'Wofuer wird der Achtknoten verwendet?', options: ['Zum Festmachen', 'Als Stoppknoten am Leinenende', 'Zum Verbinden zweier Leinen', 'Zum Abschleppen'], correct: 1, explanation: 'Der Achtknoten dient als Stoppknoten am Ende einer Leine, damit diese nicht durch eine Oese oder Klemme rutscht.' },
+            { id: 'b61', topic: 'knoten', q: 'Welcher Knoten eignet sich zum Verbinden zweier ungleich dicker Leinen?', options: ['Kreuzknoten', 'Schotstek', 'Palstek', 'Achtknoten'], correct: 1, explanation: 'Der Schotstek verbindet zwei unterschiedlich dicke Leinen sicher miteinander.' },
+            { id: 'b62', topic: 'knoten', q: 'Was ist ein Rundtoern mit zwei halben Schlaegen?', options: ['Ein Zierknoten', 'Ein Festmacherknoten an Ringen oder Pollern', 'Ein Verbindungsknoten', 'Ein Stoppknoten'], correct: 1, explanation: 'Der Rundtoern mit zwei halben Schlaegen dient zum Festmachen an Ringen, Pollern oder Stangen. Er ist sehr zuverlaessig und leicht zu loesen.' },
+            { id: 'b63', topic: 'knoten', q: 'Wie wird eine Leine auf einer Klampe richtig belegt?', options: ['Einfach herumwickeln', 'Zuerst ein Rundtoern, dann Kreuzschlaege, zum Schluss ein Kopfschlag', 'Nur ein Knoten', 'Egal wie'], correct: 1, explanation: 'Beim Belegen einer Klampe: Zuerst einen Rundtoern um den Fuss, dann Kreuzschlaege ueber die Hoerner, zum Schluss ein Kopfschlag zur Sicherung.' },
+
+            // Umwelt zusaetzlich
+            { id: 'b64', topic: 'umwelt', q: 'Was ist ein Wellenschlag und warum ist er umweltrelevant?', options: ['Nur ein Geraeusch', 'Wellen vom Boot koennen Ufer, Tiere und andere Boote schaedigen', 'Nur bei Sturm relevant', 'Betrifft nur Segelboote'], correct: 1, explanation: 'Der Wellenschlag von Motorbooten kann Uferboeschungen zerstoeren, Nistplaetze beschaedigen und vertaeute Boote gefaehrden. Daher: angepasste Geschwindigkeit!' },
+            { id: 'b65', topic: 'umwelt', q: 'Was muss bei der Benutzung einer Bordtoilette beachtet werden?', options: ['Nichts', 'Faekalien duerfen nicht in Binnengewaesser eingeleitet werden', 'Nur abends einleiten', 'Nur auf dem Meer einleiten'], correct: 1, explanation: 'In Binnengewaessern ist das Einleiten von Faekalien verboten. Es muessen Faekaltanks oder Trockentoiletten genutzt werden.' },
+            { id: 'b66', topic: 'umwelt', q: 'Warum sollen Boote in Naturschutzgebieten langsam fahren?', options: ['Wegen Treibstoffverbrauch', 'Um Wellenschlag, Laerm und Stoerung von Tieren zu minimieren', 'Wegen Untiefen', 'Nur eine Empfehlung'], correct: 1, explanation: 'In und nahe Naturschutzgebieten ist langsames Fahren Pflicht, um Wellenschlag, Laerm und Stoerungen von Brutvogeln und anderen Tieren zu vermeiden.' },
+
+            // Seemannschaft zusaetzlich
+            { id: 'b67', topic: 'seemannschaft', q: 'Was ist der Bug?', options: ['Das Heck', 'Der vordere Teil des Schiffes', 'Der Mast', 'Das Ruder'], correct: 1, explanation: 'Der Bug ist der vordere Teil des Schiffes (Vordersteven).' },
+            { id: 'b68', topic: 'seemannschaft', q: 'Was ist das Heck?', options: ['Der vordere Teil', 'Der hintere Teil des Schiffes', 'Die Mitte', 'Der Kiel'], correct: 1, explanation: 'Das Heck ist der hintere Teil des Schiffes.' },
+            { id: 'b69', topic: 'seemannschaft', q: 'Was ist der Kiel?', options: ['Der Mast', 'Der unterste Laengsbalken des Schiffskoerpers', 'Das Steuerrad', 'Eine Leine'], correct: 1, explanation: 'Der Kiel ist der unterste Teil des Schiffskoerpers und gibt dem Boot Stabilitaet und Kurstreue.' },
+            { id: 'b70', topic: 'seemannschaft', q: 'Was bedeutet "Fender ausbringen"?', options: ['Segel setzen', 'Schutzkissen zwischen Boot und Steg/anderes Boot haengen', 'Anker werfen', 'Leinen loesen'], correct: 1, explanation: 'Fender sind Schutzkissen, die an der Bordwand gehaengt werden, um das Boot beim Anlegen oder Laengsseitsliegen vor Beschaedigungen zu schuetzen.' },
+            { id: 'b71', topic: 'seemannschaft', q: 'Was ist eine Schleuse?', options: ['Ein Hafen', 'Ein Bauwerk zum Ueberwinden von Hoehenunterschieden', 'Eine Bruecke', 'Ein Leuchtturm'], correct: 1, explanation: 'Eine Schleuse ist ein Bauwerk, das es Schiffen ermoeglicht, Hoehenunterschiede im Wasserstand zu ueberwinden.' },
+            { id: 'b72', topic: 'seemannschaft', q: 'Was ist eine Spring?', options: ['Eine Vorleine', 'Eine Leine die schraeg nach vorn oder achtern belegt wird', 'Der Anker', 'Eine Ankerkette'], correct: 1, explanation: 'Eine Spring ist eine Festmacherleine, die schraeg vom Bug nach achtern oder vom Heck nach vorn fuehrt. Sie verhindert das Vor- und Zurueckschwojen.' },
+            { id: 'b73', topic: 'seemannschaft', q: 'Was bedeutet "Leine belegen"?', options: ['Leine wegwerfen', 'Eine Leine an einem Poller oder einer Klampe befestigen', 'Leine aufwickeln', 'Leine kuerzen'], correct: 1, explanation: 'Belegen bedeutet, eine Leine an einem festen Punkt (Klampe, Poller) sicher zu befestigen.' },
+            { id: 'b74', topic: 'seemannschaft', q: 'Was ist ein Poller?', options: ['Ein Fender', 'Ein fester Pfahl oder Zylinder zum Festmachen', 'Ein Anker', 'Ein Rettungsring'], correct: 1, explanation: 'Ein Poller ist ein fester, meist zylindrischer Pfahl an Kai oder Deck, an dem Leinen festgemacht werden.' },
+            { id: 'b75', topic: 'seemannschaft', q: 'Was ist eine Dalbe?', options: ['Ein Leuchtturm', 'Ein oder mehrere Pfaehle im Wasser zum Festmachen oder als Markierung', 'Ein Fender', 'Eine Boje'], correct: 1, explanation: 'Eine Dalbe ist ein in den Gewaessergrund gerammter Pfahl (oder Pfahlgruppe), der zum Festmachen oder als Fahrwassermarkierung dient.' },
         ],
         see: [
             // KVR (Kollisionsverhuetungsregeln)
@@ -1406,6 +1471,55 @@
             // Seemannschaft See
             { id: 's29', topic: 'seemannschaft_see', q: 'Was ist eine Kreuzpeilung?', options: ['Eine Peilung von zwei oder mehr Objekten zur Standortbestimmung', 'Ein Wendemanoever', 'Eine Ankertechnik', 'Ein Segelmaneuver'], correct: 0, explanation: 'Bei der Kreuzpeilung werden zwei oder mehr Landmarken angepeilt. Die Peillinien schneiden sich auf der Karte und ergeben den Standort.' },
             { id: 's30', topic: 'seemannschaft_see', q: 'Was ist der Unterschied zwischen wahrer und missweisender Peilung?', options: ['Kein Unterschied', 'Die missweisende Peilung beruecksichtigt die magnetische Deklination', 'Die wahre Peilung ist ungenauer', 'Die missweisende Peilung bezieht sich auf Sueden'], correct: 1, explanation: 'Die wahre Peilung bezieht sich auf geographisch Nord, die missweisende auf magnetisch Nord. Die Differenz ist die Missweisung.' },
+
+            // ===== Zusaetzliche Fragen See =====
+            // KVR zusaetzlich
+            { id: 's31', topic: 'kvr', q: 'Was ist die sichere Geschwindigkeit nach KVR Regel 6?', options: ['Hoechstgeschwindigkeit', 'Eine Geschwindigkeit bei der man rechtzeitig anhalten kann', 'Immer unter 5 Knoten', '10 Knoten'], correct: 1, explanation: 'Die sichere Geschwindigkeit ist die, bei der jederzeit Massnahmen zum Ausweichen oder Anhalten moeglich sind. Sie haengt von Sicht, Verkehr, Wind und Seegang ab.' },
+            { id: 's32', topic: 'kvr', q: 'Was bedeutet "kreuzendes Fahrzeug von Steuerbord"?', options: ['Ich bin Kurshalter', 'Ich bin ausweichpflichtig', 'Ich muss beschleunigen', 'Ich gebe Schallsignal'], correct: 1, explanation: 'Kommt ein Fahrzeug von Steuerbord (rechts), bin ich ausweichpflichtig. Merkhilfe: Rechts vor Links, wie im Strassenverkehr.' },
+            { id: 's33', topic: 'kvr', q: 'Was zeigt ein schleppendes Fahrzeug bei Tag zusaetzlich?', options: ['Rote Flagge', 'Einen schwarzen Rhombus', 'Zwei Baelle', 'Nichts zusaetzliches'], correct: 1, explanation: 'Ein schleppendes Fahrzeug zeigt bei Tag einen schwarzen Rhombus, wenn der Schleppzug laenger als 200 Meter ist.' },
+            { id: 's34', topic: 'kvr', q: 'Was muss ein Fahrzeug bei eingeschraenkter Sicht nach KVR tun?', options: ['Nichts besonderes', 'Sichere Geschwindigkeit fahren, Schallsignale geben, Radar nutzen', 'Sofort ankern', 'Lichter ausschalten'], correct: 1, explanation: 'Bei eingeschraenkter Sicht: Sichere Geschwindigkeit, Nebelsignale geben, Radar nutzen falls vorhanden, erhoehte Wachsamkeit.' },
+            { id: 's35', topic: 'kvr', q: 'Wer hat Vorfahrt: ein Segelboot oder ein manoevrierbehindertes Fahrzeug?', options: ['Immer das Segelboot', 'Das manoevrierbehinderte Fahrzeug', 'Kommt auf die Groesse an', 'Der Schnellere'], correct: 1, explanation: 'Ein manoevrierbehindertes Fahrzeug hat Vorrang vor Segelbooten. Die Rangfolge: nicht steuerbar > manoevrierbehindert > fischend > segelnd > Maschine.' },
+            { id: 's36', topic: 'kvr', q: 'Was zeigt ein Fahrzeug das vor Anker liegt bei Tag?', options: ['Rote Flagge', 'Schwarzen Ball im Vorschiff', 'Blaue Flagge', 'Nichts'], correct: 1, explanation: 'Ein vor Anker liegendes Fahrzeug zeigt bei Tag einen schwarzen Ball im Vorschiff.' },
+            { id: 's37', topic: 'kvr', q: 'Was zeigt ein Segelboot das gleichzeitig unter Motor faehrt bei Tag?', options: ['Nichts', 'Einen schwarzen Kegel mit Spitze nach unten', 'Rote Flagge', 'Blauen Wimpel'], correct: 1, explanation: 'Ein Segelfahrzeug das gleichzeitig unter Maschine faehrt zeigt bei Tag einen schwarzen Kegel mit Spitze nach unten.' },
+
+            // Navigation zusaetzlich
+            { id: 's38', topic: 'navigation', q: 'Was ist die Ablenkung (Deviation)?', options: ['Der Unterschied zwischen Kompasskurs und Kartenkurs', 'Die Beeinflussung des Kompasses durch Bordmagnetismus', 'Ein Navigationsfehler', 'Die Gezeitenstroemung'], correct: 1, explanation: 'Die Deviation ist die Ablenkung der Kompassnadel durch bordeigene magnetische Stoerfelder (Motoren, Elektronik, Eisen).' },
+            { id: 's39', topic: 'navigation', q: 'Was ist ein Koppelort?', options: ['Ein Hafen', 'Der errechnete Standort basierend auf Kurs, Geschwindigkeit und Zeit', 'Ein Ankerplatz', 'Ein Leuchtturm'], correct: 1, explanation: 'Der Koppelort wird errechnet aus dem letzten bekannten Standort plus Kurs, Fahrt und gefahrener Zeit (Koppelnavigation).' },
+            { id: 's40', topic: 'navigation', q: 'Was ist der Unterschied zwischen Steuerkurs und Kurs ueber Grund?', options: ['Kein Unterschied', 'KuG beruecksichtigt Strom und Wind, Steuerkurs nicht', 'Steuerkurs ist genauer', 'KuG gilt nur bei Nacht'], correct: 1, explanation: 'Der Steuerkurs ist der am Kompass gefahrene Kurs. Der Kurs ueber Grund ist der tatsaechliche Kurs unter Einfluss von Strom und Wind (Abdrift).' },
+            { id: 's41', topic: 'navigation', q: 'Was ist eine Kartenberichtigung?', options: ['Ein neuer Kartenkauf', 'Das Eintragen von Nachrichten fuer Seefahrer (NfS) in die Seekarte', 'Ein Druckfehler', 'Eine Kurslinie'], correct: 1, explanation: 'Seekarten muessen regelmaessig mit den Nachrichten fuer Seefahrer (NfS) berichtigt werden, um aktuell zu bleiben.' },
+            { id: 's42', topic: 'navigation', q: 'Was ist GPS?', options: ['Ein Funkgeraet', 'Ein satellitengestuetztes Navigationssystem', 'Ein Radargeraet', 'Ein Echolot'], correct: 1, explanation: 'GPS (Global Positioning System) ist ein satellitengestuetztes System zur weltweiten Positionsbestimmung.' },
+
+            // Lichter See zusaetzlich
+            { id: 's43', topic: 'lichter_see', q: 'Was zeigt ein Fahrzeug unter 7 Meter bei Nacht auf See?', options: ['Volle Lichter', 'Wenn moeglich ein weisses Rundumlicht', 'Gar nichts', 'Nur Seitenlichter'], correct: 1, explanation: 'Fahrzeuge unter 7 Meter, die nicht in einer engen Fahrrinne fahren, sollen wenn moeglich ein weisses Rundumlicht fuehren, muessen aber zumindest eine weisse Lichtquelle bereit haben.' },
+            { id: 's44', topic: 'lichter_see', q: 'Was zeigt ein Grundsitzer bei Nacht?', options: ['Nur Ankerlicht', 'Ankerlicht plus zwei rote Rundumlichter senkrecht', 'Drei gruene Lichter', 'Blinkendes gelbes Licht'], correct: 1, explanation: 'Ein auf Grund sitzendes Fahrzeug zeigt die Ankerlichter plus zwei rote Rundumlichter senkrecht uebereinander.' },
+            { id: 's45', topic: 'lichter_see', q: 'Welche Farbe hat das Hecklicht?', options: ['Rot', 'Gruen', 'Weiss', 'Gelb'], correct: 2, explanation: 'Das Hecklicht ist weiss und strahlt ueber einen Bogen von 135 Grad nach achtern.' },
+            { id: 's46', topic: 'lichter_see', q: 'Ein Fahrzeug zeigt Rot-Weiss-Rot senkrecht. Was bedeutet das?', options: ['Fischend', 'Manoevrierbehindert', 'Grundsitzer', 'Vor Anker'], correct: 1, explanation: 'Rot-Weiss-Rot senkrecht zeigt ein manoevrierbehindertes Fahrzeug an.' },
+
+            // Seenotsignale zusaetzlich
+            { id: 's47', topic: 'seenotsignale', q: 'Was ist EPIRB?', options: ['Ein Radargeraet', 'Ein Notfunkbake die automatisch Position sendet', 'Ein Echolot', 'Ein Rettungsring'], correct: 1, explanation: 'EPIRB (Emergency Position Indicating Radio Beacon) ist eine Notfunkbake, die bei Aktivierung automatisch die Position an Rettungsleitstellen sendet.' },
+            { id: 's48', topic: 'seenotsignale', q: 'Was ist DSC?', options: ['Ein Segel', 'Digitaler Selektivruf — automatisierter Notruf per Funk', 'Ein Navigationsgeraet', 'Ein Knotentechnik'], correct: 1, explanation: 'DSC (Digital Selective Calling) ermoeglicht den automatisierten Notruf per UKW-Funk. Per Knopfdruck wird Position und MMSI gesendet.' },
+            { id: 's49', topic: 'seenotsignale', q: 'Welche Seenotsignale gibt es neben Funk?', options: ['Nur Raketen', 'Rote Handfackeln, Rauchsignale, Flagge N ueber C, langsames Armheben', 'Nur Flaggen', 'Nur Licht'], correct: 1, explanation: 'Seenotsignale: Rote Handfackeln, orange Rauchsignale, Flaggen N ueber C, langsames Heben und Senken der Arme, SOS Morse, MAYDAY per Funk.' },
+            { id: 's50', topic: 'seenotsignale', q: 'Was ist der Unterschied zwischen MAYDAY und PAN-PAN?', options: ['Kein Unterschied', 'MAYDAY: unmittelbare Lebensgefahr, PAN-PAN: dringende Situation ohne unmittelbare Gefahr', 'PAN-PAN ist wichtiger', 'MAYDAY nur bei Feuer'], correct: 1, explanation: 'MAYDAY wird bei unmittelbarer Gefahr fuer Leben und Schiff gesendet. PAN-PAN bei dringenden Situationen die noch keine unmittelbare Lebensgefahr darstellen.' },
+
+            // Gezeiten zusaetzlich
+            { id: 's51', topic: 'gezeiten', q: 'Was ist Hochwasser?', options: ['Der niedrigste Wasserstand', 'Der hoechste Wasserstand waehrend einer Tide', 'Ueberflutung', 'Sturmflut'], correct: 1, explanation: 'Hochwasser (HW) ist der hoechste Wasserstand waehrend eines Tidenzyklus.' },
+            { id: 's52', topic: 'gezeiten', q: 'Was ist der Gezeitenstrom?', options: ['Nur die Wellenbewegung', 'Die horizontale Wasserbewegung durch Gezeiten', 'Regen', 'Wind'], correct: 1, explanation: 'Der Gezeitenstrom ist die horizontale Wasserbewegung, die durch Ebbe und Flut verursacht wird. Er kann die Navigation erheblich beeinflussen.' },
+            { id: 's53', topic: 'gezeiten', q: 'Was ist Kartennull (SKN)?', options: ['Der Mittelwasserstand', 'Der niedrigste astronomische Gezeitenstand', 'Der Hochwasserstand', 'Ein Navigationspunkt'], correct: 1, explanation: 'Kartennull (SKN/LAT) ist das niedrigste vorhergesagte Niedrigwasser. Tiefenangaben in Seekarten beziehen sich darauf — das tatsaechliche Wasser ist meist tiefer.' },
+            { id: 's54', topic: 'gezeiten', q: 'Wo findet man Gezeitenvorhersagen?', options: ['Im Wetterbericht', 'In Gezeitentafeln und Tidenkalendern', 'Auf der Seekarte', 'Im Logbuch'], correct: 1, explanation: 'Gezeitenvorhersagen finden sich in Gezeitentafeln, Tidenkalendern und nautischen Jahrbuchern. Auch Apps und Online-Dienste bieten sie an.' },
+
+            // Wetter See zusaetzlich
+            { id: 's55', topic: 'wetter_see', q: 'Was ist Seegang?', options: ['Nur Windwellen', 'Die Gesamtheit der Wasseroberflaechen-Bewegung (Windwellen + Duenung)', 'Gezeitenstroemung', 'Stroemung im Hafen'], correct: 1, explanation: 'Seegang umfasst sowohl die vom lokalen Wind erzeugten Windwellen als auch die Duenung (Wellen die aus entfernten Gebieten herangelaufen sind).' },
+            { id: 's56', topic: 'wetter_see', q: 'Was ist Duenung?', options: ['Lokale Windwellen', 'Lange, gleichmaessige Wellen von entfernten Stuermen', 'Brandung', 'Gezeitenstrom'], correct: 1, explanation: 'Duenung sind lange, gleichmaessige Wellen die von weit entfernten Stuernen stammen und sich ueber grosse Strecken ausbreiten.' },
+            { id: 's57', topic: 'wetter_see', q: 'Was bedeutet ablandiger Wind fuer Kuesten-Segler?', options: ['Immer ungefaehrlich', 'Zunehmende Entfernung von der Kueste, schwierige Rueckkehr', 'Nur bei Sturm relevant', 'Besseres Segeln'], correct: 1, explanation: 'Ablandiger Wind weht vom Land aufs Meer. Er kann Segler unbemerkt weit von der Kueste treiben, wodurch die Rueckkehr schwierig wird.' },
+            { id: 's58', topic: 'wetter_see', q: 'Was ist eine Windhose (Wasserhose) auf See?', options: ['Ein leichter Wind', 'Ein wirbelartiger Sturm der Wasser hochzieht', 'Normaler Seegang', 'Ein Regenschauer'], correct: 1, explanation: 'Eine Wasserhose ist ein Tornado ueber Wasser. Sie kann sehr gefaehrlich sein und ist sofort zu umfahren.' },
+
+            // Seemannschaft See zusaetzlich
+            { id: 's59', topic: 'seemannschaft_see', q: 'Was ist das Logge?', options: ['Ein Tagebuch', 'Ein Geraet zur Messung der Fahrt durchs Wasser', 'Ein Anker', 'Eine Seekarte'], correct: 1, explanation: 'Das Logge misst die Geschwindigkeit des Schiffes durchs Wasser (Fahrt durchs Wasser, FdW). Nicht zu verwechseln mit dem Logbuch.' },
+            { id: 's60', topic: 'seemannschaft_see', q: 'Was ist ein Echolot?', options: ['Ein Funkgeraet', 'Ein Geraet zur Messung der Wassertiefe', 'Ein Kompass', 'Ein Fernglas'], correct: 1, explanation: 'Das Echolot misst die Wassertiefe durch Aussenden und Empfangen von Schallimpulsen.' },
+            { id: 's61', topic: 'seemannschaft_see', q: 'Was ist ein Lateralsystem?', options: ['Ein Antriebssystem', 'Ein System von Tonnen die das Fahrwasser markieren', 'Ein Segelsystem', 'Ein Funksystem'], correct: 1, explanation: 'Das Lateralsystem markiert mit Tonnen die Raender des Fahrwassers: Steuerbord-Tonnen (gruen, spitz) und Backbord-Tonnen (rot, stumpf) in IALA Region A.' },
+            { id: 's62', topic: 'seemannschaft_see', q: 'Was markiert eine Kardinalzeichen?', options: ['Das Fahrwasser', 'Die Seite auf der sicher passiert werden kann', 'Einen Hafen', 'Eine Ankerstellung'], correct: 1, explanation: 'Kardinalzeichen markieren Gefahrenstellen und zeigen an, auf welcher Seite (Nord, Sued, Ost, West) sicher passiert werden kann.' },
+            { id: 's63', topic: 'seemannschaft_see', q: 'Was ist die IALA Region A?', options: ['Amerika', 'Europa, Afrika, Australien — Backbord rot, Steuerbord gruen', 'Nur Deutschland', 'Nur die Nordsee'], correct: 1, explanation: 'In IALA Region A (Europa, Afrika, Asien, Australien) ist Backbord = rot (stumpf) und Steuerbord = gruen (spitz) bei einlaufend.' },
+            { id: 's64', topic: 'seemannschaft_see', q: 'Wie wird eine Kreuzpeilung durchgefuehrt?', options: ['Ein Objekt anpeilen', 'Mindestens zwei Objekte anpeilen, Linien in Karte eintragen, Schnittpunkt = Position', 'GPS ablesen', 'Echolot nutzen'], correct: 1, explanation: 'Bei der Kreuzpeilung werden mindestens zwei Objekte angepeilt. Die Peillinien werden in die Seekarte eingetragen. Der Schnittpunkt ergibt den Standort.' },
         ]
     };
 
@@ -2214,6 +2328,7 @@
     let recognition = null;
     const hasSpeechRecognition = typeof webkitSpeechRecognition !== 'undefined' || typeof SpeechRecognition !== 'undefined';
     let openaiVoice = localStorage.getItem('sbf_openai_voice') || 'nova';
+    let driveSpeed = parseFloat(localStorage.getItem('sbf_drive_speed') || '1.2'); // 1.2 = 20% schneller
     let currentAudioSource = null; // AudioBufferSourceNode for stopping
     let audioCtx = null; // shared AudioContext, created on first user tap
     const hasTTS = typeof speechSynthesis !== 'undefined';
@@ -2318,7 +2433,8 @@
                         model: 'tts-1',
                         voice: openaiVoice,
                         input: text,
-                        response_format: 'mp3'
+                        response_format: 'mp3',
+                        speed: driveSpeed
                     })
                 });
                 if (!resp.ok) throw new Error('TTS API error: ' + resp.status);
@@ -2350,7 +2466,7 @@
                 if (i >= chunks.length || !driveActive) { resolve(); return; }
                 const utter = new SpeechSynthesisUtterance(chunks[i].trim());
                 utter.lang = 'de-DE';
-                utter.rate = 0.95;
+                utter.rate = driveSpeed;
                 utter.pitch = 1.0;
                 if (driveVoice) utter.voice = driveVoice;
                 utter.onend = () => { i++; next(); };
@@ -2380,6 +2496,12 @@
             onDriveVoiceChange();
             speakBrowser(text);
         }
+    }
+
+    function onDriveSpeedChange() {
+        driveSpeed = parseFloat(document.getElementById('drive-speed-slider').value);
+        document.getElementById('drive-speed-label').textContent = driveSpeed.toFixed(1) + 'x';
+        localStorage.setItem('sbf_drive_speed', driveSpeed);
     }
 
     function onVoiceInputToggle() {
@@ -2487,6 +2609,10 @@
 
         if (ttsEngine === 'browser') initVoiceSelect();
 
+        // Restore speed slider
+        const slider = document.getElementById('drive-speed-slider');
+        if (slider) { slider.value = driveSpeed; document.getElementById('drive-speed-label').textContent = driveSpeed.toFixed(1) + 'x'; }
+
         // Restore voice input toggle
         const vicb = document.getElementById('drive-voice-input-cb');
         if (vicb) vicb.checked = driveVoiceInput;
@@ -2549,15 +2675,13 @@
         document.getElementById('drive-feedback').textContent = '';
         document.getElementById('drive-feedback').className = 'drive-feedback';
 
-        // Read question aloud
-        await driveSpeak(`Frage ${driveIndex + 1}. ${q.q}`);
-        if (!driveActive) return;
-
-        // Read each option
+        // Read question + all options in one TTS call (less pause between options)
+        let fullText = `Frage ${driveIndex + 1}. ${q.q} `;
         for (let i = 0; i < q.options.length; i++) {
-            if (!driveActive) return;
-            await driveSpeak(`${String.fromCharCode(65 + i)}: ${q.options[i]}`);
+            fullText += `${String.fromCharCode(65 + i)}: ${q.options[i]}. `;
         }
+        await driveSpeak(fullText);
+        if (!driveActive) return;
 
         if (!driveActive) return;
         driveWaitingForAnswer = true;
