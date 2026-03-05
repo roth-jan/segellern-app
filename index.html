@@ -2972,33 +2972,12 @@
     // ==================== INIT ====================
     renderDashboard();
 
-    // Service Worker registrieren (PWA + Offline) — mit Auto-Reload bei Update
+    // Service Worker registrieren (PWA + Offline)
+    // SW nutzt network-first für HTML → frischer Content bei jedem Reload
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').then(reg => {
-            // Check for updates every 30 seconds
-            setInterval(() => reg.update(), 30000);
-
-            reg.addEventListener('updatefound', () => {
-                const newWorker = reg.installing;
-                if (!newWorker) return;
-                newWorker.addEventListener('statechange', () => {
-                    // New SW activated — reload to get fresh content
-                    if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
-                        console.log('Neue Version verfügbar — lade neu...');
-                        window.location.reload();
-                    }
-                });
-            });
-        }).catch(() => {});
-
-        // Also reload if a new SW takes over control
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
-                refreshing = true;
-                window.location.reload();
-            }
-        });
+            console.log('SW registriert:', reg.scope);
+        }).catch(err => console.warn('SW Fehler:', err));
     }
     </script>
 </body>
