@@ -2454,32 +2454,90 @@
         });
     }
 
-    // Browser TTS (fallback)
+    // Browser TTS (fallback) — fixed: cancel before speak, Chrome 15s workaround, better chunking
+    let _browserSpeaking = false;
+    let _chromePauseTimer = null;
+
     function speakBrowser(text) {
         return new Promise((resolve) => {
             if (!hasTTS) { resolve(); return; }
-            const chunks = text.length > 120
-                ? (text.match(/[^.!?]+[.!?]+/g) || [text])
-                : [text];
+
+            // Always cancel previous speech first
+            speechSynthesis.cancel();
+            _browserSpeaking = false;
+            if (_chromePauseTimer) { clearInterval(_chromePauseTimer); _chromePauseTimer = null; }
+
+            // Smart chunking: split at double-newline or after 200+ chars at sentence boundary
+            // Avoid splitting short texts or splitting at every single period
+            let chunks;
+            if (text.length <= 250) {
+                chunks = [text];
+            } else {
+                // Split at double-period-space patterns (between options) but keep chunks >= 80 chars
+                chunks = [];
+                let remaining = text;
+                while (remaining.length > 250) {
+                    // Find a good split point: sentence end (.!?) followed by space + uppercase letter
+                    let splitAt = -1;
+                    for (let j = 150; j < Math.min(remaining.length, 300); j++) {
+                        if ('.!?'.includes(remaining[j]) && remaining[j+1] === ' ' && remaining[j+2] && remaining[j+2] === remaining[j+2].toUpperCase() && remaining[j+2].match(/[A-ZÄÖÜ]/)) {
+                            splitAt = j + 1;
+                            break;
+                        }
+                    }
+                    if (splitAt === -1) splitAt = Math.min(250, remaining.length);
+                    chunks.push(remaining.slice(0, splitAt).trim());
+                    remaining = remaining.slice(splitAt).trim();
+                }
+                if (remaining) chunks.push(remaining);
+            }
+
             let i = 0;
             function next() {
-                if (i >= chunks.length || !driveActive) { resolve(); return; }
+                if (i >= chunks.length || !driveActive) {
+                    _browserSpeaking = false;
+                    if (_chromePauseTimer) { clearInterval(_chromePauseTimer); _chromePauseTimer = null; }
+                    resolve();
+                    return;
+                }
                 const utter = new SpeechSynthesisUtterance(chunks[i].trim());
                 utter.lang = 'de-DE';
                 utter.rate = driveSpeed;
                 utter.pitch = 1.0;
                 if (driveVoice) utter.voice = driveVoice;
                 utter.onend = () => { i++; next(); };
-                utter.onerror = () => { i++; next(); };
+                utter.onerror = (ev) => {
+                    // On cancel/interrupt, don't continue
+                    if (ev.error === 'canceled' || ev.error === 'interrupted') {
+                        _browserSpeaking = false;
+                        resolve();
+                        return;
+                    }
+                    i++; next();
+                };
+                _browserSpeaking = true;
                 speechSynthesis.speak(utter);
+
+                // Chrome workaround: pause/resume every 10s to prevent 15s cutoff
+                if (_chromePauseTimer) clearInterval(_chromePauseTimer);
+                _chromePauseTimer = setInterval(() => {
+                    if (speechSynthesis.speaking && !speechSynthesis.paused) {
+                        speechSynthesis.pause();
+                        speechSynthesis.resume();
+                    }
+                }, 10000);
             }
-            next();
+
+            // Small delay after cancel to ensure queue is clear
+            setTimeout(next, 50);
         });
     }
 
     function stopTTS() {
         try { if (currentAudioSource) { currentAudioSource.stop(); currentAudioSource = null; } } catch(e) {}
         if (hasTTS) speechSynthesis.cancel();
+        _browserSpeaking = false;
+        if (_chromePauseTimer) { clearInterval(_chromePauseTimer); _chromePauseTimer = null; }
     }
 
     function testVoice() {
@@ -2568,6 +2626,9 @@
         return new Promise((resolve) => {
             if (!driveActive || !text) { resolve(); return; }
 
+            // Stop any ongoing speech first and wait for cleanup
+            stopTTS();
+
             const ind = document.getElementById('drive-speaking');
             if (ind) { ind.textContent = 'Spricht...'; ind.classList.add('active'); }
 
@@ -2576,12 +2637,16 @@
                 resolve();
             };
 
-            if (ttsEngine === 'openai') {
-                speakOpenAI(text).then(done);
-            } else {
-                if (!hasTTS) { done(); return; }
-                speakBrowser(text).then(done);
-            }
+            // Small delay after stopTTS to let cancel propagate
+            setTimeout(() => {
+                if (!driveActive) { done(); return; }
+                if (ttsEngine === 'openai') {
+                    speakOpenAI(text).then(done);
+                } else {
+                    if (!hasTTS) { done(); return; }
+                    speakBrowser(text).then(done);
+                }
+            }, 80);
         });
     }
 
