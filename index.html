@@ -2361,21 +2361,43 @@
         voices.forEach((v, i) => {
             const opt = document.createElement('option');
             opt.value = i;
+            // Mark premium/enhanced voices
+            const isPremium = v.name.toLowerCase().match(/premium|enhanced|kompakt/) === null && !v.localService === false;
             opt.textContent = `${v.name} (${v.lang})`;
             select.appendChild(opt);
         });
-        const preferred = voices.findIndex(v => {
-            const n = v.name.toLowerCase();
-            return n.includes('premium') || n.includes('enhanced') || n.includes('petra');
-        });
-        if (preferred >= 0) select.value = preferred;
-        driveVoice = voices[parseInt(select.value)] || voices[0];
+
+        // Restore saved voice by name, or pick best available
+        const savedVoiceName = localStorage.getItem('sbf_browser_voice_name');
+        let selectedIdx = -1;
+
+        if (savedVoiceName) {
+            selectedIdx = voices.findIndex(v => v.name === savedVoiceName);
+        }
+
+        if (selectedIdx < 0) {
+            // Prefer premium/enhanced/Siri voices (iOS downloads), then Anna
+            selectedIdx = voices.findIndex(v => {
+                const n = v.name.toLowerCase();
+                return n.includes('premium') || n.includes('enhanced');
+            });
+            if (selectedIdx < 0) {
+                // iOS Siri voices often don't say "premium" — prefer non-compact, local voices
+                selectedIdx = voices.findIndex(v => v.localService && !v.name.toLowerCase().includes('compact') && !v.name.toLowerCase().includes('kompakt'));
+            }
+            if (selectedIdx < 0) selectedIdx = 0;
+        }
+
+        select.value = selectedIdx;
+        driveVoice = voices[selectedIdx] || voices[0];
+        localStorage.setItem('sbf_browser_voice_name', driveVoice.name);
     }
 
     function onDriveVoiceChange() {
         const voices = getGermanVoices();
         const select = document.getElementById('drive-voice-select');
         driveVoice = voices[parseInt(select.value)] || voices[0];
+        if (driveVoice) localStorage.setItem('sbf_browser_voice_name', driveVoice.name);
     }
 
     function onTtsEngineChange() {
@@ -2580,6 +2602,7 @@
     function startListening() {
         if (!hasSpeechRecognition || !driveVoiceInput || !driveWaitingForAnswer) return;
         stopListening();
+        acquireMicStream(); // track stream for forced cleanup
 
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         recognition = new SR();
@@ -2624,11 +2647,29 @@
         recognition.start();
     }
 
+    // Track active microphone stream so we can force-release it
+    let _micStream = null;
+
     function stopListening() {
         if (recognition) {
-            try { recognition.stop(); } catch(e) {}
             try { recognition.abort(); } catch(e) {}
             recognition = null;
+        }
+        // Force-release microphone by stopping all MediaStream tracks
+        if (_micStream) {
+            try { _micStream.getTracks().forEach(t => t.stop()); } catch(e) {}
+            _micStream = null;
+        }
+    }
+
+    // Acquire mic stream explicitly so we can release it on cleanup
+    // This is needed because SpeechRecognition on iOS Safari doesn't always release the mic
+    function acquireMicStream() {
+        if (_micStream) return; // already have it
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                _micStream = stream;
+            }).catch(() => {});
         }
     }
 
@@ -2636,6 +2677,7 @@
     function cleanupOnLeave() {
         stopListening();
         stopTTS();
+        driveActive = false;
         driveWaitingForAnswer = false;
         // Close AudioContext to fully release audio resources
         if (audioCtx && audioCtx.state !== 'closed') {
@@ -2646,10 +2688,13 @@
 
     window.addEventListener('pagehide', cleanupOnLeave);
     window.addEventListener('beforeunload', cleanupOnLeave);
+    // iOS Safari: also listen on 'unload' as pagehide is unreliable
+    window.addEventListener('unload', cleanupOnLeave);
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden && driveActive) {
-            // Pause mic when tab hidden, resume when visible
+        if (document.hidden) {
+            // Always release mic when page goes to background
             stopListening();
+            stopTTS();
         } else if (!document.hidden && driveActive && driveWaitingForAnswer && driveVoiceInput) {
             startListening();
         }
