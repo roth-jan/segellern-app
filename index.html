@@ -2821,12 +2821,21 @@
         document.getElementById('drive-feedback').textContent = '';
         document.getElementById('drive-feedback').className = 'drive-feedback';
 
-        // Read question + all options in one TTS call (less pause between options)
-        let fullText = `Frage ${driveIndex + 1}. ${q.q} `;
+        // Read question first, then each option separately with pauses
+        await driveSpeak(`Frage ${driveIndex + 1}. ${q.q}`);
+        if (!driveActive) return;
+
+        // Short pause between question and answers
+        await new Promise(r => setTimeout(r, 400));
+
         for (let i = 0; i < q.options.length; i++) {
-            fullText += `${String.fromCharCode(65 + i)}: ${q.options[i]}. `;
+            if (!driveActive) return;
+            await driveSpeak(`${String.fromCharCode(65 + i)}: ${q.options[i]}`);
+            if (i < q.options.length - 1) {
+                // Short pause between options
+                await new Promise(r => setTimeout(r, 300));
+            }
         }
-        await driveSpeak(fullText);
         if (!driveActive) return;
 
         if (!driveActive) return;
