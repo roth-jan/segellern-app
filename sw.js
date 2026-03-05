@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sbf-navigator-v7';
+const CACHE_NAME = 'sbf-navigator-v8';
 const ASSETS = [
   './',
   './index.html',
@@ -25,8 +25,22 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Network-first for API calls, cache-first for app assets
+  // Skip API calls entirely
   if (e.request.url.includes('api.anthropic.com') || e.request.url.includes('api.openai.com') || e.request.url.includes('api.deepseek.com')) return;
+
+  // Network-first for HTML/navigation — always get fresh content
+  if (e.request.mode === 'navigate' || e.request.destination === 'document' || e.request.url.endsWith('.html') || e.request.url.endsWith('/')) {
+    e.respondWith(
+      fetch(e.request).then(resp => {
+        const clone = resp.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+        return resp;
+      }).catch(() => caches.match(e.request).then(c => c || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Cache-first for static assets (images, fonts, JS, CSS)
   e.respondWith(
     caches.match(e.request).then(cached =>
       cached || fetch(e.request).then(resp => {
