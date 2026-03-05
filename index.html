@@ -2411,10 +2411,20 @@
 
     // Ensure AudioContext exists and is resumed (must be called from user gesture)
     function ensureAudioCtx() {
-        if (!audioCtx) {
+        if (!audioCtx || audioCtx.state === 'closed') {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+            // Safari fix: play a silent buffer to fully unlock audio output
+            try {
+                const silentBuf = audioCtx.createBuffer(1, 1, 22050);
+                const src = audioCtx.createBufferSource();
+                src.buffer = silentBuf;
+                src.connect(audioCtx.destination);
+                src.start(0);
+            } catch(e) {}
+        }
         return audioCtx;
     }
 
@@ -2616,10 +2626,34 @@
 
     function stopListening() {
         if (recognition) {
+            try { recognition.stop(); } catch(e) {}
             try { recognition.abort(); } catch(e) {}
             recognition = null;
         }
     }
+
+    // Cleanup microphone + audio when leaving page or switching tabs
+    function cleanupOnLeave() {
+        stopListening();
+        stopTTS();
+        driveWaitingForAnswer = false;
+        // Close AudioContext to fully release audio resources
+        if (audioCtx && audioCtx.state !== 'closed') {
+            audioCtx.close().catch(() => {});
+            audioCtx = null;
+        }
+    }
+
+    window.addEventListener('pagehide', cleanupOnLeave);
+    window.addEventListener('beforeunload', cleanupOnLeave);
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && driveActive) {
+            // Pause mic when tab hidden, resume when visible
+            stopListening();
+        } else if (!document.hidden && driveActive && driveWaitingForAnswer && driveVoiceInput) {
+            startListening();
+        }
+    });
 
     // Main speak function — routes to OpenAI or Browser
     function driveSpeak(text) {
@@ -2691,6 +2725,8 @@
     }
 
     function startDriveMode() {
+        // Must call during user gesture to unlock audio on Safari/iOS
+        ensureAudioCtx();
         onDriveVoiceChange();
         let pool = [...questions[currentLicense]];
         shuffleArray(pool);
